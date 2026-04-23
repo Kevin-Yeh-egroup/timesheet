@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { CalendarIcon, Check } from "lucide-react"
 import { zhTW } from "date-fns/locale"
@@ -27,8 +27,9 @@ import {
   type ConversionStatus,
 } from "@/lib/types"
 import { toast } from "sonner"
+import type { AIParsedResult } from "@/components/ai-intake-demo"
 
-export function AddRecordForm() {
+export function AddRecordForm({ prefill }: { prefill?: AIParsedResult | null }) {
   const addRecord = useTimeRecordStore((state) => state.addRecord)
 
   const [date, setDate] = useState<Date>(new Date())
@@ -41,6 +42,19 @@ export function AddRecordForm() {
   const [assets, setAssets] = useState<Asset[]>([])
   const [conversionStatus, setConversionStatus] = useState<ConversionStatus>("尚未啟動")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!prefill) return
+    setDate(new Date())
+    setActivity(prefill.activity)
+    setCategory(prefill.category)
+    setHours(prefill.hours.toString())
+    setDifficulty(prefill.difficulty)
+    setHasOutput(prefill.hasOutput)
+    setOutputDescription(prefill.outputDescription ?? "")
+    setAssets(prefill.assets)
+    setConversionStatus(prefill.conversionStatus)
+  }, [prefill])
 
   const toggleAsset = (asset: Asset) => {
     setAssets((prev) =>

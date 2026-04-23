@@ -1,10 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import { AppShell } from "@/components/app-shell"
 import { AddRecordForm } from "@/components/add-record-form"
+import { AIIntakeDemo, type AIParsedResult } from "@/components/ai-intake-demo"
 import { QuickTemplates } from "@/components/quick-templates"
 
 export default function AddPage() {
+  const [prefillRecord, setPrefillRecord] = useState<AIParsedResult | null>(null)
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -15,8 +19,9 @@ export default function AddPage() {
           </p>
         </header>
 
+        <AIIntakeDemo onParsed={setPrefillRecord} />
         <QuickTemplates />
-        <AddRecordForm />
+        <AddRecordForm prefill={prefillRecord} />
       </div>
     </AppShell>
   )
