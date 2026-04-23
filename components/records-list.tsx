@@ -8,8 +8,8 @@ import { Trash2, CheckCircle, Circle } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
-import type { TimeRecord } from "@/lib/types"
-import { getDifficultyLabel, getDifficultyColor } from "@/lib/types"
+import type { Category, TimeRecord } from "@/lib/types"
+import { CATEGORIES, getDifficultyLabel, getDifficultyColor } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
 import { EditRecordDialog } from "@/components/edit-record-dialog"
 import { toast } from "sonner"
@@ -17,13 +17,19 @@ import { toast } from "sonner"
 interface RecordsListProps {
   records: TimeRecord[]
   showDate?: boolean
+  enableCategoryFilter?: boolean
 }
 
-export function RecordsList({ records, showDate = true }: RecordsListProps) {
+export function RecordsList({ records, showDate = true, enableCategoryFilter = false }: RecordsListProps) {
   const deleteRecord = useTimeRecordStore((state) => state.deleteRecord)
   const deleteRecords = useTimeRecordStore((state) => state.deleteRecords)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const visibleRecords = useMemo(() => records.slice(0, 10), [records])
+  const [activeCategory, setActiveCategory] = useState<Category | "全部">("全部")
+  const visibleRecords = useMemo(() => {
+    const filtered =
+      activeCategory === "全部" ? records : records.filter((record) => record.category === activeCategory)
+    return filtered.slice(0, 10)
+  }, [records, activeCategory])
 
   const handleDelete = (id: string) => {
     deleteRecord(id)
@@ -75,7 +81,30 @@ export function RecordsList({ records, showDate = true }: RecordsListProps) {
     <Card className="border-border/50">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-base">最近紀錄</CardTitle>
+          <div className="space-y-2">
+            <CardTitle className="text-base">最近紀錄</CardTitle>
+            {enableCategoryFilter && (
+              <div className="flex flex-wrap gap-1.5">
+                <Button
+                  size="sm"
+                  variant={activeCategory === "全部" ? "default" : "outline"}
+                  onClick={() => setActiveCategory("全部")}
+                >
+                  全部
+                </Button>
+                {CATEGORIES.map((category) => (
+                  <Button
+                    key={category}
+                    size="sm"
+                    variant={activeCategory === category ? "default" : "outline"}
+                    onClick={() => setActiveCategory(category)}
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Checkbox checked={isAllVisibleSelected} onCheckedChange={(v) => toggleSelectAllVisible(v === true)} />

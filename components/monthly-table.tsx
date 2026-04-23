@@ -1,9 +1,12 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ArrowUpDown } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -13,13 +16,39 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { TimeRecord } from "@/lib/types"
-import { getDifficultyLabel, getDifficultyColor } from "@/lib/types"
+import { CATEGORIES, getDifficultyLabel, getDifficultyColor } from "@/lib/types"
 
 interface MonthlyTableProps {
   records: TimeRecord[]
 }
 
 export function MonthlyTable({ records }: MonthlyTableProps) {
+  const [sortBy, setSortBy] = useState<"date" | "category">("date")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+
+  const handleSort = (field: "date" | "category") => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+      return
+    }
+    setSortBy(field)
+    setSortOrder(field === "date" ? "desc" : "asc")
+  }
+
+  const sortedRecords = useMemo(() => {
+    const categoryOrder = new Map(CATEGORIES.map((category, index) => [category, index]))
+
+    return [...records].sort((a, b) => {
+      if (sortBy === "date") {
+        const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime()
+        return sortOrder === "asc" ? dateDiff : -dateDiff
+      }
+
+      const categoryCompare = (categoryOrder.get(a.category) ?? 0) - (categoryOrder.get(b.category) ?? 0)
+      return sortOrder === "asc" ? categoryCompare : -categoryCompare
+    })
+  }, [records, sortBy, sortOrder])
+
   if (records.length === 0) {
     return (
       <Card className="border-border/50">
@@ -43,9 +72,31 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-20">日期</TableHead>
+                <TableHead className="w-20">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2 h-7 px-2"
+                    onClick={() => handleSort("date")}
+                  >
+                    日期
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    {sortBy === "date" && <span className="text-[10px]">{sortOrder === "asc" ? "升" : "降"}</span>}
+                  </Button>
+                </TableHead>
                 <TableHead>活動</TableHead>
-                <TableHead className="w-16">類別</TableHead>
+                <TableHead className="w-16">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2 h-7 px-2"
+                    onClick={() => handleSort("category")}
+                  >
+                    類別
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    {sortBy === "category" && <span className="text-[10px]">{sortOrder === "asc" ? "升" : "降"}</span>}
+                  </Button>
+                </TableHead>
                 <TableHead className="w-16 text-right">時數</TableHead>
                 <TableHead className="w-20">難度</TableHead>
                 <TableHead className="w-24">資產</TableHead>
@@ -53,7 +104,7 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {records.map((record) => (
+              {sortedRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell className="text-sm">
                     {format(new Date(record.date), "M/d", { locale: zhTW })}

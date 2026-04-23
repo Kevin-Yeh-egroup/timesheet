@@ -54,7 +54,7 @@ export default function DashboardPage() {
           <AssetSummary records={monthRecords} />
         </div>
 
-        <RecordsList records={records} />
+        <RecordsList records={records} enableCategoryFilter />
       </div>
     </AppShell>
   )
