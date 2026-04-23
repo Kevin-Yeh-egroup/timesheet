@@ -1,14 +1,17 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Trash2, CheckCircle, Circle } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
 import type { TimeRecord } from "@/lib/types"
 import { getDifficultyLabel, getDifficultyColor } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
+import { EditRecordDialog } from "@/components/edit-record-dialog"
 import { toast } from "sonner"
 
 interface RecordsListProps {
@@ -18,10 +21,41 @@ interface RecordsListProps {
 
 export function RecordsList({ records, showDate = true }: RecordsListProps) {
   const deleteRecord = useTimeRecordStore((state) => state.deleteRecord)
+  const deleteRecords = useTimeRecordStore((state) => state.deleteRecords)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const visibleRecords = useMemo(() => records.slice(0, 10), [records])
 
   const handleDelete = (id: string) => {
     deleteRecord(id)
+    setSelectedIds((prev) => prev.filter((item) => item !== id))
     toast.success("紀錄已刪除")
+  }
+
+  const allVisibleIds = visibleRecords.map((record) => record.id)
+  const isAllVisibleSelected =
+    allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id))
+
+  const toggleSelect = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      if (checked) return [...prev, id]
+      return prev.filter((item) => item !== id)
+    })
+  }
+
+  const toggleSelectAllVisible = (checked: boolean) => {
+    if (!checked) {
+      setSelectedIds((prev) => prev.filter((id) => !allVisibleIds.includes(id)))
+      return
+    }
+
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...allVisibleIds])))
+  }
+
+  const handleBatchDelete = () => {
+    if (selectedIds.length === 0) return
+    deleteRecords(selectedIds)
+    toast.success(`已批次刪除 ${selectedIds.length} 筆紀錄`)
+    setSelectedIds([])
   }
 
   if (records.length === 0) {
@@ -40,14 +74,35 @@ export function RecordsList({ records, showDate = true }: RecordsListProps) {
   return (
     <Card className="border-border/50">
       <CardHeader>
-        <CardTitle className="text-base">最近紀錄</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-base">最近紀錄</CardTitle>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Checkbox checked={isAllVisibleSelected} onCheckedChange={(v) => toggleSelectAllVisible(v === true)} />
+              <span>全選</span>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={selectedIds.length === 0}
+              onClick={handleBatchDelete}
+            >
+              批次刪除 ({selectedIds.length})
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {records.slice(0, 10).map((record) => (
+        {visibleRecords.map((record) => (
           <div
             key={record.id}
             className="flex items-start justify-between gap-3 rounded-lg border border-border/50 p-3"
           >
+            <Checkbox
+              checked={selectedIds.includes(record.id)}
+              onCheckedChange={(checked) => toggleSelect(record.id, checked === true)}
+              className="mt-1"
+            />
             <div className="flex-1 space-y-1.5">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
@@ -84,6 +139,7 @@ export function RecordsList({ records, showDate = true }: RecordsListProps) {
                 </div>
               )}
             </div>
+            <EditRecordDialog record={record} />
             <Button
               variant="ghost"
               size="icon"

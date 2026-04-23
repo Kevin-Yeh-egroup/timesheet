@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Clock, Zap, TrendingUp, Target } from "lucide-react"
+import { Clock, Zap, Boxes, Target } from "lucide-react"
 import type { Metrics } from "@/lib/types"
 
 interface MetricsCardsProps {
@@ -17,16 +17,16 @@ export function MetricsCards({ metrics }: MetricsCardsProps) {
       description: "本月累計",
     },
     {
-      title: "難度積分",
-      value: metrics.difficultyScore.toFixed(0),
+      title: "平均難度",
+      value: `${metrics.avgDifficulty.toFixed(1)}/5`,
       icon: Zap,
-      description: "時數 × 難度",
+      description: `以時數加權 · 高難度 ${metrics.highDifficultyRatio.toFixed(0)}%`,
     },
     {
-      title: "資產點數",
-      value: metrics.assetPoints.toFixed(0),
-      icon: TrendingUp,
-      description: "累積資產值",
+      title: "資產與產出項目數",
+      value: `${metrics.intangibleAssetCount + metrics.tangibleAssetCount + metrics.outputRecordCount}`,
+      icon: Boxes,
+      description: `無形 ${metrics.intangibleAssetCount} / 有形 ${metrics.tangibleAssetCount} / 有產出 ${metrics.outputRecordCount}`,
     },
     {
       title: "轉換率",

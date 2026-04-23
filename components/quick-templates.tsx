@@ -37,7 +37,7 @@ export function QuickTemplates() {
       difficulty: template.difficulty,
       hasOutput: false,
       assets: template.assets,
-      conversionStatus: "尚未轉換",
+      conversionStatus: "尚未啟動",
     })
     toast.success(`已新增「${template.activity}」`)
   }

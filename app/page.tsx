@@ -8,6 +8,7 @@ import { MetricsCards } from "@/components/metrics-cards"
 import { CategoryChart } from "@/components/category-chart"
 import { AssetSummary } from "@/components/asset-summary"
 import { RecordsList } from "@/components/records-list"
+import { DemoPresetCard } from "@/components/demo-preset-card"
 import { useTimeRecordStore } from "@/lib/store"
 import { calculateMetrics } from "@/lib/types"
 
@@ -43,6 +44,8 @@ export default function DashboardPage() {
             {format(now, "yyyy年M月", { locale: zhTW })} · 共 {monthRecords.length} 筆紀錄
           </p>
         </header>
+
+        <DemoPresetCard />
 
         <MetricsCards metrics={metrics} />
 

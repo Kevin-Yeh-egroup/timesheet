@@ -97,8 +97,8 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
                       }
                       className="text-xs"
                     >
-                      {record.conversionStatus === "尚未轉換"
-                        ? "待轉"
+                      {record.conversionStatus === "尚未啟動"
+                        ? "待啟動"
                         : record.conversionStatus === "已開始嘗試"
                         ? "嘗試中"
                         : "已轉換"}

@@ -4,7 +4,7 @@ export type IntangibleAsset = "體力" | "軟實力" | "硬實力"
 export type TangibleAsset = "存款增加" | "收入" | "工具/副業基礎"
 export type Asset = IntangibleAsset | TangibleAsset
 
-export type ConversionStatus = "尚未轉換" | "已開始嘗試" | "已產生收入或成果"
+export type ConversionStatus = "尚未啟動" | "已開始嘗試" | "已產生收入或成果"
 
 export interface TimeRecord {
   id: string
@@ -23,7 +23,10 @@ export interface TimeRecord {
 export interface Metrics {
   totalHours: number
   difficultyScore: number // hours × difficulty
-  assetPoints: number
+  avgDifficulty: number // weighted by hours, 1-5
+  intangibleAssetCount: number
+  tangibleAssetCount: number
+  outputRecordCount: number
   conversionRate: number // percentage
   highDifficultyRatio: number // percentage of high difficulty (4-5) time
 }
@@ -35,7 +38,7 @@ export const TANGIBLE_ASSETS: TangibleAsset[] = ["存款增加", "收入", "工�
 export const ALL_ASSETS: Asset[] = [...INTANGIBLE_ASSETS, ...TANGIBLE_ASSETS]
 
 export const CONVERSION_STATUSES: ConversionStatus[] = [
-  "尚未轉換",
+  "尚未啟動",
   "已開始嘗試",
   "已產生收入或成果"
 ]
@@ -57,7 +60,10 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
     return {
       totalHours: 0,
       difficultyScore: 0,
-      assetPoints: 0,
+      avgDifficulty: 0,
+      intangibleAssetCount: 0,
+      tangibleAssetCount: 0,
+      outputRecordCount: 0,
       conversionRate: 0,
       highDifficultyRatio: 0
     }
@@ -65,20 +71,21 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
 
   const totalHours = records.reduce((sum, r) => sum + r.hours, 0)
   const difficultyScore = records.reduce((sum, r) => sum + r.hours * r.difficulty, 0)
+  const avgDifficulty = totalHours > 0 ? difficultyScore / totalHours : 0
   
-  // Asset points: intangible +1, tangible +2, has output +2
-  const assetPoints = records.reduce((sum, r) => {
-    let points = 0
-    r.assets.forEach(asset => {
+  let intangibleAssetCount = 0
+  let tangibleAssetCount = 0
+  let outputRecordCount = 0
+  records.forEach((r) => {
+    r.assets.forEach((asset) => {
       if (INTANGIBLE_ASSETS.includes(asset as IntangibleAsset)) {
-        points += 1
+        intangibleAssetCount += 1
       } else {
-        points += 2
+        tangibleAssetCount += 1
       }
     })
-    if (r.hasOutput) points += 2
-    return sum + points
-  }, 0)
+    if (r.hasOutput) outputRecordCount += 1
+  })
 
   const recordsWithOutput = records.filter(r => r.hasOutput).length
   const conversionRate = (recordsWithOutput / records.length) * 100
@@ -91,7 +98,10 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
   return {
     totalHours,
     difficultyScore,
-    assetPoints,
+    avgDifficulty,
+    intangibleAssetCount,
+    tangibleAssetCount,
+    outputRecordCount,
     conversionRate,
     highDifficultyRatio
   }

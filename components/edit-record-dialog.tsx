@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { format } from "date-fns"
-import { CalendarIcon, Check } from "lucide-react"
+import { useEffect, useState } from "react"
+import { format, parseISO } from "date-fns"
+import { CalendarIcon, Check, Pencil } from "lucide-react"
 import { zhTW } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
@@ -16,48 +15,58 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useTimeRecordStore } from "@/lib/store"
 import {
-  CATEGORIES,
   ALL_ASSETS,
+  CATEGORIES,
   CONVERSION_STATUSES,
   getDifficultyLabel,
-  type Category,
   type Asset,
+  type Category,
   type ConversionStatus,
+  type TimeRecord
 } from "@/lib/types"
 import { toast } from "sonner"
 
-export function AddRecordForm() {
-  const addRecord = useTimeRecordStore((state) => state.addRecord)
+export function EditRecordDialog({ record }: { record: TimeRecord }) {
+  const updateRecord = useTimeRecordStore((state) => state.updateRecord)
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState<Date>(parseISO(record.date))
+  const [activity, setActivity] = useState(record.activity)
+  const [category, setCategory] = useState<Category>(record.category)
+  const [hours, setHours] = useState(record.hours.toString())
+  const [difficulty, setDifficulty] = useState(record.difficulty)
+  const [hasOutput, setHasOutput] = useState(record.hasOutput)
+  const [outputDescription, setOutputDescription] = useState(record.outputDescription ?? "")
+  const [assets, setAssets] = useState<Asset[]>(record.assets)
+  const [conversionStatus, setConversionStatus] = useState<ConversionStatus>(record.conversionStatus)
 
-  const [date, setDate] = useState<Date>(new Date())
-  const [activity, setActivity] = useState("")
-  const [category, setCategory] = useState<Category>("學習")
-  const [hours, setHours] = useState("1")
-  const [difficulty, setDifficulty] = useState(3)
-  const [hasOutput, setHasOutput] = useState(false)
-  const [outputDescription, setOutputDescription] = useState("")
-  const [assets, setAssets] = useState<Asset[]>([])
-  const [conversionStatus, setConversionStatus] = useState<ConversionStatus>("尚未啟動")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    setDate(parseISO(record.date))
+    setActivity(record.activity)
+    setCategory(record.category)
+    setHours(record.hours.toString())
+    setDifficulty(record.difficulty)
+    setHasOutput(record.hasOutput)
+    setOutputDescription(record.outputDescription ?? "")
+    setAssets(record.assets)
+    setConversionStatus(record.conversionStatus)
+  }, [open, record])
 
   const toggleAsset = (asset: Asset) => {
-    setAssets((prev) =>
-      prev.includes(asset) ? prev.filter((a) => a !== asset) : [...prev, asset]
-    )
+    setAssets((prev) => (prev.includes(asset) ? prev.filter((a) => a !== asset) : [...prev, asset]))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!activity.trim()) {
       toast.error("請輸入活動內容")
       return
     }
 
-    setIsSubmitting(true)
-
-    addRecord({
+    updateRecord(record.id, {
       date: format(date, "yyyy-MM-dd"),
       activity: activity.trim(),
       category,
@@ -66,69 +75,48 @@ export function AddRecordForm() {
       hasOutput,
       outputDescription: hasOutput ? outputDescription : undefined,
       assets,
-      conversionStatus,
+      conversionStatus
     })
-
-    toast.success("紀錄已新增")
-
-    // Reset form
-    setActivity("")
-    setHours("1")
-    setDifficulty(3)
-    setHasOutput(false)
-    setOutputDescription("")
-    setAssets([])
-    setConversionStatus("尚未啟動")
-    setIsSubmitting(false)
+    toast.success("紀錄已更新")
+    setOpen(false)
   }
 
   return (
-    <Card className="border-border/50">
-      <CardHeader>
-        <CardTitle className="text-base">新增時間紀錄</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Date */}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>編輯紀錄</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSave} className="space-y-4">
           <div className="space-y-2">
             <Label>日期</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
+                <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "yyyy年M月d日 (EEE)", { locale: zhTW }) : "選擇日期"}
+                  {format(date, "yyyy年M月d日 (EEE)", { locale: zhTW })}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(d) => d && setDate(d)}
-                  initialFocus
-                />
+                <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus />
               </PopoverContent>
             </Popover>
           </div>
-
-          {/* Activity */}
           <div className="space-y-2">
-            <Label htmlFor="activity">活動內容</Label>
+            <Label htmlFor={`activity-${record.id}`}>活動內容</Label>
             <Input
-              id="activity"
-              placeholder="例如：閱讀《原子習慣》30頁"
+              id={`activity-${record.id}`}
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
+              placeholder="活動內容"
             />
           </div>
-
-          {/* Category & Hours */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>類別</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
@@ -145,9 +133,9 @@ export function AddRecordForm() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="hours">時數</Label>
+              <Label htmlFor={`hours-${record.id}`}>時數</Label>
               <Input
-                id="hours"
+                id={`hours-${record.id}`}
                 type="number"
                 min="0.5"
                 step="0.5"
@@ -156,34 +144,18 @@ export function AddRecordForm() {
               />
             </div>
           </div>
-
-          {/* Difficulty */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>難度 / 消耗程度</Label>
-              <span className="text-sm text-muted-foreground">
-                {difficulty} - {getDifficultyLabel(difficulty)}
-              </span>
-            </div>
-            <Slider
-              value={[difficulty]}
-              onValueChange={([v]) => setDifficulty(v)}
-              min={1}
-              max={5}
-              step={1}
-              className="py-2"
-            />
+          <div className="space-y-2">
+            <Label>難度 / 消耗程度：{difficulty} - {getDifficultyLabel(difficulty)}</Label>
+            <Slider value={[difficulty]} onValueChange={([v]) => setDifficulty(v)} min={1} max={5} step={1} />
           </div>
-
-          {/* Assets */}
-          <div className="space-y-3">
-            <Label>累積的資產 (可多選)</Label>
+          <div className="space-y-2">
+            <Label>累積資產 (可多選)</Label>
             <div className="flex flex-wrap gap-2">
               {ALL_ASSETS.map((asset) => (
                 <Badge
                   key={asset}
                   variant={assets.includes(asset) ? "default" : "outline"}
-                  className="cursor-pointer transition-colors"
+                  className="cursor-pointer"
                   onClick={() => toggleAsset(asset)}
                 >
                   {assets.includes(asset) && <Check className="mr-1 h-3 w-3" />}
@@ -192,40 +164,28 @@ export function AddRecordForm() {
               ))}
             </div>
           </div>
-
-          {/* Has Output */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Checkbox
-              id="hasOutput"
+              id={`has-output-${record.id}`}
               checked={hasOutput}
               onCheckedChange={(checked) => setHasOutput(checked === true)}
             />
-            <Label htmlFor="hasOutput" className="cursor-pointer">
-              這段時間有具體產出
-            </Label>
+            <Label htmlFor={`has-output-${record.id}`}>這段時間有具體產出</Label>
           </div>
-
-          {/* Output Description */}
           {hasOutput && (
             <div className="space-y-2">
-              <Label htmlFor="outputDesc">產出說明</Label>
+              <Label htmlFor={`output-${record.id}`}>產出說明</Label>
               <Textarea
-                id="outputDesc"
-                placeholder="例如：完成一篇文章草稿"
+                id={`output-${record.id}`}
                 value={outputDescription}
                 onChange={(e) => setOutputDescription(e.target.value)}
                 rows={2}
               />
             </div>
           )}
-
-          {/* Conversion Status */}
           <div className="space-y-2">
             <Label>轉換狀態</Label>
-            <Select
-              value={conversionStatus}
-              onValueChange={(v) => setConversionStatus(v as ConversionStatus)}
-            >
+            <Select value={conversionStatus} onValueChange={(v) => setConversionStatus(v as ConversionStatus)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -238,12 +198,11 @@ export function AddRecordForm() {
               </SelectContent>
             </Select>
           </div>
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "儲存中..." : "新增紀錄"}
+          <Button type="submit" className="w-full">
+            儲存變更
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }
