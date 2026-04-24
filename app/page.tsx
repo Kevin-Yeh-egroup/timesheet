@@ -9,8 +9,9 @@ import { CategoryChart } from "@/components/category-chart"
 import { AssetSummary } from "@/components/asset-summary"
 import { RecordsList } from "@/components/records-list"
 import { DemoPresetCard } from "@/components/demo-preset-card"
+import { ReflectionInsights } from "@/components/reflection-insights"
 import { useTimeRecordStore } from "@/lib/store"
-import { calculateMetrics } from "@/lib/types"
+import { calculateMetrics, calculateTrackedHoursByDate } from "@/lib/types"
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false)
@@ -34,6 +35,9 @@ export default function DashboardPage() {
   const now = new Date()
   const monthRecords = getMonthRecords(now.getFullYear(), now.getMonth())
   const metrics = calculateMetrics(monthRecords)
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  const yesterdayTrackedHours = calculateTrackedHoursByDate(records, yesterday)
 
   return (
     <AppShell>
@@ -48,6 +52,7 @@ export default function DashboardPage() {
         <DemoPresetCard />
 
         <MetricsCards metrics={metrics} />
+        <ReflectionInsights metrics={metrics} yesterdayTrackedHours={yesterdayTrackedHours} />
 
         <div className="grid gap-4 md:grid-cols-2">
           <CategoryChart records={monthRecords} />

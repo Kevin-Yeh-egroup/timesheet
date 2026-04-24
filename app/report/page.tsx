@@ -8,8 +8,9 @@ import { MetricsCards } from "@/components/metrics-cards"
 import { WeeklyChart } from "@/components/weekly-chart"
 import { MonthlyTable } from "@/components/monthly-table"
 import { ExportButton } from "@/components/export-button"
+import { ReflectionInsights } from "@/components/reflection-insights"
 import { useTimeRecordStore } from "@/lib/store"
-import { calculateMetrics } from "@/lib/types"
+import { calculateMetrics, calculateTrackedHoursByDate } from "@/lib/types"
 
 export default function ReportPage() {
   const [mounted, setMounted] = useState(false)
@@ -33,6 +34,9 @@ export default function ReportPage() {
   const now = new Date()
   const monthRecords = getMonthRecords(now.getFullYear(), now.getMonth())
   const metrics = calculateMetrics(monthRecords)
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  const yesterdayTrackedHours = calculateTrackedHoursByDate(records, yesterday)
 
   return (
     <AppShell>
@@ -48,6 +52,7 @@ export default function ReportPage() {
         </header>
 
         <MetricsCards metrics={metrics} />
+        <ReflectionInsights metrics={metrics} yesterdayTrackedHours={yesterdayTrackedHours} />
         <WeeklyChart records={records} />
         <MonthlyTable records={monthRecords} />
       </div>

@@ -29,6 +29,13 @@ export interface Metrics {
   outputRecordCount: number
   conversionRate: number // percentage
   highDifficultyRatio: number // percentage of high difficulty (4-5) time
+  productiveHours: number
+  productiveRatio: number // percentage
+  restHours: number
+  learningHours: number
+  relationshipHours: number
+  exerciseHours: number
+  potentialOpportunityCostHours: number
 }
 
 export const CATEGORIES: Category[] = ["工作", "學習", "副業", "人際", "休息"]
@@ -65,7 +72,14 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
       tangibleAssetCount: 0,
       outputRecordCount: 0,
       conversionRate: 0,
-      highDifficultyRatio: 0
+      highDifficultyRatio: 0,
+      productiveHours: 0,
+      productiveRatio: 0,
+      restHours: 0,
+      learningHours: 0,
+      relationshipHours: 0,
+      exerciseHours: 0,
+      potentialOpportunityCostHours: 0
     }
   }
 
@@ -95,6 +109,34 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
     .reduce((sum, r) => sum + r.hours, 0)
   const highDifficultyRatio = totalHours > 0 ? (highDifficultyHours / totalHours) * 100 : 0
 
+  const productiveCategories: Category[] = ["工作", "學習", "副業", "人際"]
+  const productiveHours = records
+    .filter((r) => productiveCategories.includes(r.category))
+    .reduce((sum, r) => sum + r.hours, 0)
+  const productiveRatio = totalHours > 0 ? (productiveHours / totalHours) * 100 : 0
+
+  const restHours = records
+    .filter((r) => r.category === "休息")
+    .reduce((sum, r) => sum + r.hours, 0)
+
+  const learningHours = records
+    .filter((r) => r.category === "學習")
+    .reduce((sum, r) => sum + r.hours, 0)
+
+  const relationshipHours = records
+    .filter((r) => r.category === "人際")
+    .reduce((sum, r) => sum + r.hours, 0)
+
+  const exerciseKeywords = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
+  const exerciseHours = records
+    .filter((r) => exerciseKeywords.some((keyword) => r.activity.includes(keyword)))
+    .reduce((sum, r) => sum + r.hours, 0)
+
+  const lowReturnWorkHours = records
+    .filter((r) => r.category === "工作" && !r.hasOutput && r.assets.length === 0)
+    .reduce((sum, r) => sum + r.hours, 0)
+  const potentialOpportunityCostHours = restHours + lowReturnWorkHours
+
   return {
     totalHours,
     difficultyScore,
@@ -103,8 +145,22 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
     tangibleAssetCount,
     outputRecordCount,
     conversionRate,
-    highDifficultyRatio
+    highDifficultyRatio,
+    productiveHours,
+    productiveRatio,
+    restHours,
+    learningHours,
+    relationshipHours,
+    exerciseHours,
+    potentialOpportunityCostHours
   }
+}
+
+export function calculateTrackedHoursByDate(records: TimeRecord[], date: Date): number {
+  const targetDate = date.toISOString().slice(0, 10)
+  return records
+    .filter((r) => r.date === targetDate)
+    .reduce((sum, r) => sum + r.hours, 0)
 }
 
 export function getAssetSummary(records: TimeRecord[]): { intangible: string; tangible: string } {

@@ -100,6 +100,9 @@ export function AddRecordForm({ prefill }: { prefill?: AIParsedResult | null }) 
     <Card className="border-border/50">
       <CardHeader>
         <CardTitle className="text-base">新增時間紀錄</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          建議每天固定時段（例如晚間 21:00）回顧並補齊前一天的 24 小時去向。
+        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">

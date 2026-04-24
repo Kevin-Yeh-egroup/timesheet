@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Clock, Zap, Boxes, Target } from "lucide-react"
+import { Clock, Zap, Boxes, Target, TrendingUp, AlertTriangle } from "lucide-react"
 import type { Metrics } from "@/lib/types"
 
 interface MetricsCardsProps {
@@ -34,10 +34,22 @@ export function MetricsCards({ metrics }: MetricsCardsProps) {
       icon: Target,
       description: "產出比例",
     },
+    {
+      title: "生產力時數",
+      value: `${metrics.productiveHours.toFixed(1)} 小時`,
+      icon: TrendingUp,
+      description: `工作/學習/副業/人際占比 ${metrics.productiveRatio.toFixed(0)}%`,
+    },
+    {
+      title: "潛在機會成本",
+      value: `${metrics.potentialOpportunityCostHours.toFixed(1)} 小時`,
+      icon: AlertTriangle,
+      description: `休息 ${metrics.restHours.toFixed(1)} 小時 + 低回報工作時數`,
+    },
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
       {cards.map((card) => (
         <Card key={card.title} className="border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
