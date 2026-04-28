@@ -1,4 +1,4 @@
-export type Category = "工作" | "學習" | "副業" | "人際" | "休息"
+export type Category = "工作" | "學習" | "副業" | "人際" | "休息" | "鍛鍊"
 
 export type TimeValueType = "成長型" | "生產型" | "恢復型" | "關係型" | "彈性型"
 
@@ -41,7 +41,7 @@ export interface Metrics {
   exerciseHours: number
 }
 
-export const CATEGORIES: Category[] = ["工作", "學習", "副業", "人際", "休息"]
+export const CATEGORIES: Category[] = ["工作", "學習", "副業", "人際", "休息", "鍛鍊"]
 
 export const INTANGIBLE_ASSETS: IntangibleAsset[] = ["體力", "軟實力", "硬實力"]
 export const TANGIBLE_ASSETS: TangibleAsset[] = ["存款增加", "收入", "工具/副業基礎"]
@@ -61,6 +61,7 @@ export function getTimeValueType(category: Category): TimeValueType {
     case "工作":
       return "生產型"
     case "休息":
+    case "鍛鍊":
       return "恢復型"
     case "人際":
       return "關係型"
@@ -150,9 +151,13 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
     .filter((r) => r.category === "人際")
     .reduce((sum, r) => sum + r.hours, 0)
 
+  // 鍛鍊類別 + 舊資料關鍵字相容
   const exerciseKeywords = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
   const exerciseHours = records
-    .filter((r) => exerciseKeywords.some((keyword) => r.activity.includes(keyword)))
+    .filter((r) =>
+      r.category === "鍛鍊" ||
+      (r.category === "休息" && exerciseKeywords.some((k) => r.activity.includes(k)))
+    )
     .reduce((sum, r) => sum + r.hours, 0)
 
   // 有價值時間比例：有刻意付出（難度≥2）且有產出或資產的時間
@@ -263,6 +268,7 @@ export function getDailyFeedback(metrics: Metrics, records: TimeRecord[]): strin
   const hasRest = records.some(r => r.category === "休息")
   const hasLearning = records.some(r => r.category === "學習")
   const hasRelationship = records.some(r => r.category === "人際")
+  const hasExercise = records.some(r => r.category === "鍛鍊")
 
   if (hasWork && hasRest) {
     feedbackOptions.push("今天的時間配置包含工作與休息，維持良好節奏。")
@@ -272,6 +278,9 @@ export function getDailyFeedback(metrics: Metrics, records: TimeRecord[]): strin
   }
   if (hasRelationship) {
     feedbackOptions.push("今天照顧到了關係與人際，這也是很重要的投資。")
+  }
+  if (hasExercise) {
+    feedbackOptions.push("今天有安排鍛鍊時間，體力正在穩定累積。")
   }
   if (metrics.conversionRate >= 50) {
     feedbackOptions.push("今天有不少時間轉化為具體成果，累積正在發生。")
@@ -428,6 +437,7 @@ const CAPABILITY_DEFS: Array<{
 ]
 
 export function calculateCapabilities(records: TimeRecord[]): CapabilityScore[] {
+  // 舊資料相容：休息類別中含運動關鍵字也計入體力
   const exerciseKeywords = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
 
   const workRecs = records.filter(r => r.category === "工作")
@@ -441,7 +451,14 @@ export function calculateCapabilities(records: TimeRecord[]): CapabilityScore[] 
 
   const sideDiffScore = records.filter(r => r.category === "副業").reduce((s, r) => s + r.hours * r.difficulty, 0)
   const restHours = records.filter(r => r.category === "休息").reduce((s, r) => s + r.hours, 0)
-  const exerciseHours = records.filter(r => exerciseKeywords.some(k => r.activity.includes(k))).reduce((s, r) => s + r.hours, 0)
+
+  // 鍛鍊類別直接計入；舊資料以關鍵字從休息中抓
+  const exerciseHours = records
+    .filter(r =>
+      r.category === "鍛鍊" ||
+      (r.category === "休息" && exerciseKeywords.some(k => r.activity.includes(k)))
+    )
+    .reduce((s, r) => s + r.hours, 0)
 
   const relRecs = records.filter(r => r.category === "人際")
   const relHours = relRecs.reduce((s, r) => s + r.hours, 0)

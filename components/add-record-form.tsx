@@ -42,6 +42,7 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   "副業": "🌱",
   "人際": "💛",
   "休息": "🌿",
+  "鍛鍊": "🏃",
 }
 
 export function AddRecordForm({ prefill }: { prefill?: AIParsedResult | null }) {

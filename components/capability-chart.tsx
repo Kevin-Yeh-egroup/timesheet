@@ -9,8 +9,6 @@ interface CapabilityChartProps {
   records: TimeRecord[]
 }
 
-const EXERCISE_KEYWORDS = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
-
 // 每種能力的時間歸因權重與來源標籤
 const CAPABILITY_HOUR_CONFIG = [
   {
@@ -29,16 +27,14 @@ const CAPABILITY_HOUR_CONFIG = [
     id: "physicalStrength",
     name: "增加體力",
     emoji: "💪",
-    sources: ["休息"],
+    sources: ["休息", "鍛鍊"],
     colorBar: "bg-green-500",
     colorBg: "bg-green-50",
     colorText: "text-green-700",
     colorBadge: "bg-green-100 text-green-600",
     getHours: (r: TimeRecord) =>
-      r.category === "休息" || EXERCISE_KEYWORDS.some(k => r.activity.includes(k))
-        ? r.hours
-        : 0,
-    hint: "休息與運動時間直接轉化為精力與體能儲備",
+      r.category === "休息" || r.category === "鍛鍊" ? r.hours : 0,
+    hint: "休息恢復精力；鍛鍊主動強化體能，共同累積體力資本",
   },
   {
     id: "coreSkills",

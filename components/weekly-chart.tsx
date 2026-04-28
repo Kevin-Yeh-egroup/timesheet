@@ -15,10 +15,9 @@ interface WeeklyChartProps {
   records: TimeRecord[]
 }
 
-const EXERCISE_KEYWORDS = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
-
 // 六維能力定義：名稱、顏色、每筆紀錄的時數歸因函式
 // 歸因規則確保同一天的時數合計 ≈ 當日實際總時數（無重複計算）
+// 休息 + 鍛鍊 → 增加體力；工作 → 調整時間 30% + 強化能力 70%
 const CAPABILITIES = [
   {
     key: "調整時間",
@@ -31,8 +30,7 @@ const CAPABILITIES = [
     color: "#22c55e",
     emoji: "💪",
     getHours: (r: TimeRecord) =>
-      r.category === "休息" || EXERCISE_KEYWORDS.some(k => r.activity.includes(k))
-        ? r.hours : 0,
+      r.category === "休息" || r.category === "鍛鍊" ? r.hours : 0,
   },
   {
     key: "強化能力",
