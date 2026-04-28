@@ -31,7 +31,7 @@ export function DemoPresetCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          一鍵載入 7 筆範例紀錄（含工作、學習、副業、人際、休息），可立即展示總覽與報表。
+          一鍵載入 7 筆範例紀錄（含工作、學習、副業、人際、休息、鍛鍊），可立即展示總覽與報表。
         </p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={handleLoadDemo}>載入 Demo 資料</Button>

@@ -2,12 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, PlusCircle, FileText } from "lucide-react"
+import { LayoutDashboard, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "總覽", icon: LayoutDashboard },
-  { href: "/add", label: "新增", icon: PlusCircle },
   { href: "/report", label: "報表", icon: FileText },
 ]
 

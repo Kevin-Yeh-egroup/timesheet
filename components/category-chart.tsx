@@ -9,13 +9,14 @@ interface CategoryChartProps {
   records: TimeRecord[]
 }
 
-// 藍=穩定(工作)、綠=成果(學習)、橘=挑戰(副業)、金=關係(人際)、灰藍=恢復(休息)
+// 藍=穩定(工作)、綠=成果(學習)、橘=挑戰(副業)、金=關係(人際)、灰藍=恢復(休息)、萊姆=鍛鍊
 const COLORS: Record<Category, string> = {
   "工作": "#3b82f6",
   "學習": "#10b981",
   "副業": "#f97316",
   "人際": "#f59e0b",
   "休息": "#94a3b8",
+  "鍛鍊": "#84cc16",
 }
 
 const CUSTOM_LABELS: Record<Category, string> = {
@@ -24,6 +25,7 @@ const CUSTOM_LABELS: Record<Category, string> = {
   "副業": "副業（成長型）",
   "人際": "人際（關係型）",
   "休息": "休息（恢復型）",
+  "鍛鍊": "鍛鍊（恢復型）",
 }
 
 export function CategoryChart({ records }: CategoryChartProps) {

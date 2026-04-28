@@ -50,7 +50,7 @@ export function buildDemoRecords(): TimeRecord[] {
     {
       date: format(subDays(now, 5), "yyyy-MM-dd"),
       activity: "健身與伸展恢復",
-      category: "休息",
+      category: "鍛鍊",
       hours: 1,
       difficulty: 3,
       hasOutput: false,

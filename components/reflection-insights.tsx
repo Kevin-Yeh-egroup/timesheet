@@ -23,6 +23,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "副業": "bg-orange-400",
   "人際": "bg-amber-400",
   "休息": "bg-slate-400",
+  "鍛鍊": "bg-lime-400",
 }
 
 // ─── 昨日 Tab ───────────────────────────────
@@ -40,8 +41,9 @@ function YesterdayTab({ insights, records }: { insights: YesterdayInsights; reco
   // 溫和建議
   const suggestion = (() => {
     if (insights.trackedHours === 0) return "今天可以嘗試記錄昨天的時間，讓累積更清晰。"
-    if (!insights.hasRest) return "昨天看起來沒有休息記錄，今天記得給自己一些恢復時間。"
-    if (!insights.hasLearning && !insights.hasWork) return "昨天主要在休息，今天可以加入一點學習或工作的投入。"
+    if (!insights.hasRest && !insights.hasExercise) return "昨天看起來沒有休息或鍛鍊的記錄，今天記得給自己一些恢復時間。"
+    if (!insights.hasRest && insights.hasExercise) return "昨天有鍛鍊很好！也可以安排一些放鬆的休息時間，讓身體充分恢復。"
+    if (!insights.hasLearning && !insights.hasWork) return "昨天主要在休息或鍛鍊，今天可以加入一點學習或工作的投入。"
     if (insights.categoryBreakdown.length === 1) return "昨天集中在單一類別，今天可以嘗試加入其他面向的時間。"
     return "昨天的配置不錯，今天繼續保持這樣的節奏。"
   })()
@@ -120,7 +122,8 @@ function WeekTab({ insights, records }: { insights: WeeklyInsights; records: Tim
   })()
 
   const suggestion = (() => {
-    if (weekMetrics.restHours < 3) return "本週休息時間略少，可以安排一些恢復性活動。"
+    const exerciseHours = weekRecs.filter(r => r.category === "鍛鍊").reduce((s, r) => s + r.hours, 0)
+    if (weekMetrics.restHours < 3 && exerciseHours < 1) return "本週休息與鍛鍊時間都略少，可以安排一些恢復或運動活動。"
     if (weekMetrics.learningHours < 2) return "可以嘗試在本週加入一些學習時間，哪怕每天 20 分鐘。"
     if (weekMetrics.relationshipHours === 0) return "本週還沒有人際互動的記錄，可以安排一些與家人或朋友的時間。"
     return "本週節奏不錯，繼續保持。"

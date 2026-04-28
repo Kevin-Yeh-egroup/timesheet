@@ -97,7 +97,7 @@ function parseSegment(seg: string): AIParsedResult {
   const assets: Asset[] = []
   if (["學習", "副業", "工作"].includes(category)) assets.push("硬實力")
   if (["人際", "副業"].includes(category)) assets.push("軟實力")
-  if (category === "休息") assets.push("體力")
+  if (category === "休息" || category === "鍛鍊") assets.push("體力")
   if (hasOutput) assets.push("工具/副業基礎")
 
   return {

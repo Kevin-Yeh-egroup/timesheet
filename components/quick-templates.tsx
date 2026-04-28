@@ -21,8 +21,9 @@ const QUICK_TEMPLATES: QuickTemplate[] = [
   { category: "學習", activity: "線上課程", hours: 1.5, difficulty: 3, assets: ["硬實力"] },
   { category: "副業", activity: "寫作創作", hours: 1, difficulty: 4, assets: ["軟實力", "工具/副業基礎"] },
   { category: "副業", activity: "經營社群", hours: 0.5, difficulty: 2, assets: ["工具/副業基礎"] },
-  { category: "人際", activity: "與朋友聚會", hours: 2, difficulty: 1, assets: ["體力"] },
-  { category: "休息", activity: "運動健身", hours: 1, difficulty: 3, assets: ["體力"] },
+  { category: "人際", activity: "與朋友聚會", hours: 2, difficulty: 1, assets: ["軟實力"] },
+  { category: "鍛鍊", activity: "運動健身", hours: 1, difficulty: 3, assets: ["體力"] },
+  { category: "休息", activity: "充分休息", hours: 1, difficulty: 1, assets: ["體力"] },
 ]
 
 export function QuickTemplates() {
@@ -37,7 +38,7 @@ export function QuickTemplates() {
       difficulty: template.difficulty,
       hasOutput: false,
       assets: template.assets,
-      conversionStatus: "尚未啟動",
+      conversionStatus: "尚未轉換",
     })
     toast.success(`已新增「${template.activity}」`)
   }

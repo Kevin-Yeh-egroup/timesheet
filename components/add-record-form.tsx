@@ -45,7 +45,7 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   "鍛鍊": "🏃",
 }
 
-export function AddRecordForm({ prefill }: { prefill?: AIParsedResult | null }) {
+export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult | null; onSuccess?: () => void }) {
   const addRecord = useTimeRecordStore((state) => state.addRecord)
 
   const [date, setDate] = useState<Date>(new Date())
@@ -112,6 +112,7 @@ export function AddRecordForm({ prefill }: { prefill?: AIParsedResult | null }) 
     setJustAdded(true)
 
     setTimeout(() => setJustAdded(false), 4000)
+    if (onSuccess) setTimeout(onSuccess, 1200)
   }
 
   const diffInfo = DIFFICULTY_LABELS[difficulty] ?? DIFFICULTY_LABELS[3]

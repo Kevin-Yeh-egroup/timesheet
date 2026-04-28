@@ -516,6 +516,7 @@ export interface YesterdayInsights {
   hasRest: boolean
   hasLearning: boolean
   hasRelationship: boolean
+  hasExercise: boolean
   outputCount: number
 }
 
@@ -546,6 +547,7 @@ export function getYesterdayInsights(records: TimeRecord[]): YesterdayInsights {
     hasRest: recs.some(r => r.category === "休息"),
     hasLearning: recs.some(r => r.category === "學習"),
     hasRelationship: recs.some(r => r.category === "人際"),
+    hasExercise: recs.some(r => r.category === "鍛鍊"),
     outputCount: recs.filter(r => r.hasOutput).length,
   }
 }
