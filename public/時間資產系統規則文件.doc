@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    margin: 2.5cm 3cm;
+    color: #1a1a2e;
+    font-size: 10.5pt;
+    line-height: 1.8;
+  }
+  h1 { font-size: 20pt; color: #1e40af; margin-bottom: 4px; border-bottom: 3px solid #1e40af; padding-bottom: 6px; }
+  h2 { font-size: 14pt; color: #1e40af; margin-top: 28px; margin-bottom: 8px; border-bottom: 1.5px solid #bfdbfe; padding-bottom: 4px; }
+  h3 { font-size: 11.5pt; color: #1d4ed8; margin-top: 18px; margin-bottom: 6px; }
+  h4 { font-size: 10.5pt; color: #374151; margin-top: 14px; margin-bottom: 4px; }
+  p { margin: 6px 0; }
+  .subtitle { color: #6b7280; font-size: 9.5pt; margin-bottom: 24px; }
+  .rule-file { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #1e40af; border-radius: 4px; padding: 12px 16px; margin: 14px 0; }
+  .rule-file-title { font-size: 10pt; font-weight: 700; color: #1e40af; margin-bottom: 4px; }
+  .rule-file-meta { font-size: 9pt; color: #6b7280; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9.5pt; }
+  th { background: #eff6ff; color: #1e40af; font-weight: 700; padding: 6px 10px; border: 1px solid #bfdbfe; text-align: left; }
+  td { padding: 5px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .good { color: #16a34a; font-weight: 600; }
+  .bad { color: #dc2626; font-weight: 600; }
+  .badge { display: inline-block; background: #eff6ff; color: #1e40af; border-radius: 4px; padding: 1px 7px; font-size: 9pt; font-weight: 600; }
+  .badge-green { background: #f0fdf4; color: #16a34a; }
+  .badge-orange { background: #fff7ed; color: #ea580c; }
+  .badge-purple { background: #faf5ff; color: #7c3aed; }
+  .badge-amber { background: #fffbeb; color: #d97706; }
+  .badge-teal { background: #f0fdfa; color: #0d9488; }
+  .code { font-family: "Consolas", "Courier New", monospace; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; padding: 8px 12px; font-size: 9pt; color: #1e293b; white-space: pre; line-height: 1.6; margin: 8px 0; display: block; }
+  .highlight { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 14px; margin: 10px 0; }
+  .warning { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 14px; margin: 10px 0; color: #92400e; }
+  ul { margin: 6px 0 6px 20px; }
+  li { margin: 3px 0; }
+  .cap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .cap-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; background: #f8fafc; }
+  .cap-name { font-weight: 700; font-size: 10pt; color: #1e40af; }
+  .cap-detail { font-size: 9pt; color: #6b7280; margin-top: 3px; }
+  .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 9pt; }
+  .toc-item { margin: 4px 0; color: #1e40af; }
+  .section-num { color: #6b7280; margin-right: 8px; }
+</style>
+</head>
+<body>
+
+<h1>時間資產轉換系統 — 規則文件</h1>
+<p class="subtitle">專案設計規範 · 語言守則 · 技術慣例 · AI 協作指引<br>
+最後更新：2026年4月28日</p>
+
+<div class="highlight">
+  <strong>文件用途：</strong>本文件定義「時間資產轉換與生活觀察系統」的所有設計決策、計算規則與開發慣例，供 AI 協作、新功能開發與維護時參考。
+</div>
+
+<h2>目錄</h2>
+<p class="toc-item"><span class="section-num">1.</span>產品核心哲學</p>
+<p class="toc-item"><span class="section-num">2.</span>技術架構</p>
+<p class="toc-item"><span class="section-num">3.</span>核心資料模型</p>
+<p class="toc-item"><span class="section-num">4.</span>六維能力系統</p>
+<p class="toc-item"><span class="section-num">5.</span>時間 → 能力歸因規則</p>
+<p class="toc-item"><span class="section-num">6.</span>UI 設計規範</p>
+<p class="toc-item"><span class="section-num">7.</span>語言與語氣守則</p>
+<p class="toc-item"><span class="section-num">8.</span>觀察與建議模組（昨日/本週/本月）</p>
+<p class="toc-item"><span class="section-num">9.</span>匯出功能規格</p>
+<p class="toc-item"><span class="section-num">10.</span>元件開發慣例</p>
+<p class="toc-item"><span class="section-num">11.</span>規則檔案清單（.cursor/rules/）</p>
+
+<!-- ─── 1 ─────────────────────────────── -->
+<h2>1. 產品核心哲學</h2>
+
+<p>此工具的唯一目標是幫助使用者：</p>
+<ul>
+  <li>看見自己的時間配置</li>
+  <li>理解正在累積的能力與資源</li>
+  <li>發現不同選擇的可能性</li>
+  <li>慢慢靠近理想生活</li>
+</ul>
+
+<div class="highlight">
+  所有呈現以「觀察、理解、引導」為主，<strong>絕對禁止</strong>任何評分、檢討、責備的語氣。
+</div>
+
+<h3>三個核心概念轉換</h3>
+<table>
+  <tr><th>輸入</th><th>→</th><th>輸出</th></tr>
+  <tr><td>每日時間記錄</td><td>→</td><td>六維能力分數</td></tr>
+  <tr><td>能力分數</td><td>→</td><td>未來可能性提示</td></tr>
+  <tr><td>未來可能性</td><td>→</td><td>具體的經濟效益說明</td></tr>
+</table>
+
+<!-- ─── 2 ─────────────────────────────── -->
+<h2>2. 技術架構</h2>
+
+<table>
+  <tr><th>層次</th><th>技術</th><th>說明</th></tr>
+  <tr><td>框架</td><td>Next.js 16 App Router</td><td>Static Export，三個路由：/ /add /report</td></tr>
+  <tr><td>語言</td><td>TypeScript 5.7</td><td>ignoreBuildErrors: true（Vercel 部署用）</td></tr>
+  <tr><td>UI 元件</td><td>shadcn/ui（new-york 風格）+ Radix</td><td>components.json 管理</td></tr>
+  <tr><td>樣式</td><td>Tailwind CSS 4</td><td>@import 'tailwindcss'，app/globals.css</td></tr>
+  <tr><td>狀態管理</td><td>Zustand 5 + persist</td><td>localStorage key: time-records-storage</td></tr>
+  <tr><td>圖表</td><td>Recharts 2.15</td><td>WeeklyChart 用；CapabilityChart 用純 CSS</td></tr>
+  <tr><td>日期</td><td>date-fns 4</td><td>zhTW locale</td></tr>
+  <tr><td>字型</td><td>Noto Sans TC</td><td>400/500/600/700</td></tr>
+  <tr><td>分析</td><td>@vercel/analytics</td><td>只在 production 載入</td></tr>
+</table>
+
+<h3>目錄結構</h3>
+<span class="code">app/
+  layout.tsx        ← Root layout，全域字型與 Toaster
+  page.tsx          ← 總覽（Dashboard）
+  globals.css       ← Tailwind 入口
+  add/page.tsx      ← 新增紀錄
+  report/page.tsx   ← 月報表
+
+lib/
+  types.ts          ← 所有型別、計算函式、能力系統
+  store.ts          ← Zustand store
+  demo-data.ts      ← Demo 資料
+  utils.ts          ← cn() 工具函式
+
+components/
+  capability-chart.tsx     ← 時間→能力分布（CSS 橫條）
+  weekly-chart.tsx         ← 近 7 天能力趨勢（Recharts 堆疊長條）
+  future-possibilities.tsx ← 六維能力卡片 + 里程碑路徑
+  reflection-insights.tsx  ← 昨日/本週/本月 Tab
+  daily-completion.tsx     ← 24小時完整度
+  add-record-form.tsx      ← 手動新增表單
+  ai-intake-demo.tsx       ← 快速輸入（AI整理）
+  export-button.tsx        ← CSV / Word / PDF 匯出
+  metrics-cards.tsx        ← 六個指標卡片
+  asset-summary.tsx        ← 資產累積觀察
+  monthly-table.tsx        ← 月度紀錄明細表
+  navigation.tsx           ← 底部/側邊導覽
+  app-shell.tsx            ← 頁面框架
+
+.cursor/rules/
+  project-core.mdc         ← 永遠套用
+  component-patterns.mdc   ← 開啟 .tsx 時套用
+  reflection-insights.mdc  ← 開啟 reflection-insights.tsx 時套用
+  export-conventions.mdc   ← 開啟 export-button.tsx 時套用</span>
+
+<!-- ─── 3 ─────────────────────────────── -->
+<h2>3. 核心資料模型</h2>
+
+<h3>TimeRecord</h3>
+<span class="code">interface TimeRecord {
+  id: string
+  date: string              // "yyyy-MM-dd"
+  activity: string          // 活動描述
+  category: Category        // 見下方
+  hours: number             // 0.5 起，step 0.5
+  difficulty: number        // 1–5
+  hasOutput: boolean        // 是否有具體成果
+  outputDescription?: string
+  assets: Asset[]           // 多選
+  conversionStatus: ConversionStatus
+  createdAt: string         // ISO 時間戳
+}</span>
+
+<h3>型別枚舉</h3>
+<table>
+  <tr><th>型別</th><th>允許值</th></tr>
+  <tr>
+    <td>Category</td>
+    <td>"工作" | "學習" | "副業" | "人際" | "休息"</td>
+  </tr>
+  <tr>
+    <td>ConversionStatus</td>
+    <td>"尚未轉換" | "已開始嘗試" | "已有成果"</td>
+  </tr>
+  <tr>
+    <td>IntangibleAsset</td>
+    <td>"體力" | "軟實力" | "硬實力"</td>
+  </tr>
+  <tr>
+    <td>TangibleAsset</td>
+    <td>"存款增加" | "收入" | "工具/副業基礎"</td>
+  </tr>
+</table>
+
+<h3>難度標籤</h3>
+<table>
+  <tr><th>數值</th><th>標籤</th><th>顏色</th></tr>
+  <tr><td>1–2</td><td>輕鬆</td><td>text-muted-foreground（灰）</td></tr>
+  <tr><td>3</td><td>中等</td><td>text-blue-500</td></tr>
+  <tr><td>4–5</td><td>較有挑戰</td><td>text-orange-500</td></tr>
+</table>
+
+<h3>資產累積點數公式</h3>
+<span class="code">assetPoints = intangibleAssetCount × 1
+            + tangibleAssetCount × 2
+            + outputRecordCount × 1.5</span>
+
+<!-- ─── 4 ─────────────────────────────── -->
+<h2>4. 六維能力系統</h2>
+
+<p>六種能力對應使用者可用於解決經濟問題的核心資本：</p>
+
+<table>
+  <tr><th>能力</th><th>Emoji</th><th>計算原料</th><th>softCap</th><th>計算公式（raw score）</th></tr>
+  <tr>
+    <td>調整時間</td><td>⏱️</td>
+    <td>工作時數、類別多元性、紀錄筆數</td>
+    <td>35</td>
+    <td>workH×0.4 + avgCatPerDay×8 + records×0.5</td>
+  </tr>
+  <tr>
+    <td>增加體力</td><td>💪</td>
+    <td>休息時數、運動關鍵字時數</td>
+    <td>20</td>
+    <td>restH×1.0 + exerciseH×2.5</td>
+  </tr>
+  <tr>
+    <td>強化能力</td><td>🧱</td>
+    <td>工作困難投入值、工作有產出筆數</td>
+    <td>50</td>
+    <td>workDiffScore×0.5 + workWithOutput×5</td>
+  </tr>
+  <tr>
+    <td>增加技能</td><td>📚</td>
+    <td>學習/副業困難投入值、硬實力標籤數</td>
+    <td>30</td>
+    <td>learnDiff×1.0 + sideDiff×0.7 + hardSkill×2</td>
+  </tr>
+  <tr>
+    <td>運用人脈</td><td>🤝</td>
+    <td>人際時數、人際有產出筆數、軟實力標籤數</td>
+    <td>20</td>
+    <td>relH×2 + relOutput×8 + softSkill×1.5</td>
+  </tr>
+  <tr>
+    <td>增加知識</td><td>💡</td>
+    <td>學習時數、學習困難投入值</td>
+    <td>25</td>
+    <td>learnH×1.5 + learnDiff×0.8</td>
+  </tr>
+</table>
+
+<h3>Sigmoid 平滑公式</h3>
+<span class="code">score = Math.round(100 × ratio / (1 + ratio))
+其中 ratio = rawScore / softCap
+
+// 特性：
+// ratio = 1 (rawScore = softCap) → score = 50%
+// ratio = 2                       → score ≈ 67%
+// ratio = 4                       → score ≈ 80%
+// 不會輕易達到 100%，也不會長期停在 0%</span>
+
+<h3>能力四個階段</h3>
+<table>
+  <tr><th>分數範圍</th><th>調整時間</th><th>增加體力</th><th>強化能力</th><th>增加技能</th><th>運用人脈</th><th>增加知識</th></tr>
+  <tr><td>0–29%</td><td>時間覺察</td><td>基礎維持</td><td>能力基礎</td><td>技能探索</td><td>人脈基礎</td><td>知識積累</td></tr>
+  <tr><td>30–59%</td><td>有意安排</td><td>穩定儲備</td><td>效率提升</td><td>技能成型</td><td>信任建立</td><td>知識應用</td></tr>
+  <tr><td>60–79%</td><td>靈活調配</td><td>精力充沛</td><td>競爭優勢</td><td>斜槓雛形</td><td>機會網絡</td><td>深度洞察</td></tr>
+  <tr><td>80–100%</td><td>時間自主</td><td>巔峰狀態</td><td>領域專家</td><td>技能套件</td><td>人脈資本</td><td>知識資產</td></tr>
+</table>
+
+<!-- ─── 5 ─────────────────────────────── -->
+<h2>5. 時間 → 能力歸因規則</h2>
+
+<p>用於圖表的時間歸因確保<strong>同一天時數不重複計算</strong>，合計 ≈ 當日實際總時數：</p>
+
+<table>
+  <tr><th>類別</th><th>⏱️ 調整時間</th><th>💪 增加體力</th><th>🧱 強化能力</th><th>📚 增加技能</th><th>🤝 運用人脈</th><th>💡 增加知識</th></tr>
+  <tr><td>工作</td><td class="good">×0.3</td><td>—</td><td class="good">×0.7</td><td>—</td><td>—</td><td>—</td></tr>
+  <tr><td>休息</td><td>—</td><td class="good">×1.0</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+  <tr><td>學習</td><td>—</td><td>—</td><td>—</td><td class="good">×0.5</td><td>—</td><td class="good">×0.5</td></tr>
+  <tr><td>副業</td><td>—</td><td>—</td><td>—</td><td class="good">×1.0</td><td>—</td><td>—</td></tr>
+  <tr><td>人際</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="good">×1.0</td><td>—</td></tr>
+</table>
+
+<p>說明：工作時數分配給「調整時間 30%」+「強化能力 70%」；學習時數分配給「增加技能 50%」+「增加知識 50%」。</p>
+
+<!-- ─── 6 ─────────────────────────────── -->
+<h2>6. UI 設計規範</h2>
+
+<h3>主色系統</h3>
+<table>
+  <tr><th>能力</th><th>Tailwind Bar</th><th>Tailwind Badge</th><th>Recharts 色碼</th></tr>
+  <tr><td>⏱️ 調整時間</td><td>bg-blue-500</td><td>bg-blue-100 text-blue-700</td><td>#3b82f6</td></tr>
+  <tr><td>💪 增加體力</td><td>bg-green-500</td><td>bg-green-100 text-green-700</td><td>#22c55e</td></tr>
+  <tr><td>🧱 強化能力</td><td>bg-orange-500</td><td>bg-orange-100 text-orange-700</td><td>#f97316</td></tr>
+  <tr><td>📚 增加技能</td><td>bg-purple-500</td><td>bg-purple-100 text-purple-700</td><td>#a855f7</td></tr>
+  <tr><td>🤝 運用人脈</td><td>bg-amber-500</td><td>bg-amber-100 text-amber-700</td><td>#f59e0b</td></tr>
+  <tr><td>💡 增加知識</td><td>bg-teal-500</td><td>bg-teal-100 text-teal-700</td><td>#14b8a6</td></tr>
+</table>
+
+<h3>24小時完整度顯示規則</h3>
+<table>
+  <tr><th>完整度</th><th>標籤</th><th>顏色</th><th>語氣示範</th></tr>
+  <tr><td>≥ 100%</td><td>完整記錄</td><td>text-green-600</td><td>「今天的 24 小時已完整記錄，很棒！」</td></tr>
+  <tr><td>70–99%</td><td>大致完整</td><td>text-blue-600</td><td>「已記錄 X 小時，幫助你更全面看見一天的配置」</td></tr>
+  <tr><td>&lt; 70%</td><td>可補充</td><td>text-orange-500</td><td>「今天還有一些時間可以補充記錄…」</td></tr>
+</table>
+
+<h3>新增成功回饋卡</h3>
+<p>每次成功新增紀錄，在表單頂部顯示 4 秒後消失：</p>
+<span class="code">&lt;div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3"&gt;
+  ✨ 這段時間已記錄為你的累積
+&lt;/div&gt;</span>
+
+<!-- ─── 7 ─────────────────────────────── -->
+<h2>7. 語言與語氣守則</h2>
+
+<div class="warning">
+  <strong>絕對禁用詞彙：</strong>評分、扣分、太少、不夠、浪費、機會成本（作為負面指標）、低效、應該、必須
+</div>
+
+<h3>正向替換對照</h3>
+<table>
+  <tr><th>❌ 禁用</th><th>✅ 替換</th></tr>
+  <tr><td>尚未啟動</td><td>尚未轉換</td></tr>
+  <tr><td>已產生收入或成果</td><td>已有成果</td></tr>
+  <tr><td>潛在機會成本</td><td>資產累積點數</td></tr>
+  <tr><td>低回報工作</td><td>恢復型時間</td></tr>
+  <tr><td>你應該多運動</td><td>可以嘗試加入短時段的運動</td></tr>
+  <tr><td>學習時數偏低</td><td>可以嘗試增加一些學習時間</td></tr>
+  <tr><td>生產力</td><td>成長生產時間</td></tr>
+</table>
+
+<h3>建議語句開頭規範</h3>
+<ul>
+  <li>✅「可以嘗試…」「可以安排…」「可以加入…」</li>
+  <li>✅「如果想要…，可以…」</li>
+  <li>❌「你應該…」「你必須…」「建議你一定要…」</li>
+</ul>
+
+<!-- ─── 8 ─────────────────────────────── -->
+<h2>8. 觀察與建議模組（昨日 / 本週 / 本月）</h2>
+
+<h3>昨日 Tab</h3>
+<ul>
+  <li>計算函式：<code>getYesterdayInsights(records)</code> → YesterdayInsights</li>
+  <li>顯示內容：24小時完整度 + 類別橫條圖 + 正向回饋 + 1條溫和建議</li>
+  <li>建議優先順序：無休息 &gt; 無學習/工作 &gt; 類別單一 &gt; 預設正向</li>
+</ul>
+
+<h3>本週 Tab</h3>
+<ul>
+  <li>計算函式：<code>getWeeklyInsights(records)</code> → WeeklyInsights</li>
+  <li>日期範圍：今天往前推 6 天（含今天共 7 天），從 T00:00:00 起算</li>
+  <li>顯示內容：本週時數、最投入日、有成果筆數、類別分布橫條、觀察語句、1條建議</li>
+</ul>
+
+<h3>本月 Tab</h3>
+<ul>
+  <li>計算函式：<code>getMonthTypology(metrics)</code> + <code>getMonthSuggestions(metrics)</code></li>
+  <li>顯示內容：時間型態描述（1句）+ 系統觀察（1句）+ 建議（最多 3 條）</li>
+</ul>
+
+<h3>架構原則</h3>
+<p>所有計算邏輯放 <code>lib/types.ts</code>，元件只做 UI 渲染。</p>
+
+<!-- ─── 9 ─────────────────────────────── -->
+<h2>9. 匯出功能規格</h2>
+
+<table>
+  <tr><th>格式</th><th>實作</th><th>檔名</th><th>BOM</th></tr>
+  <tr><td>CSV</td><td>Blob + text/csv</td><td>時間資產紀錄_YYYYMM.csv</td><td>✅（Excel 相容）</td></tr>
+  <tr><td>Word</td><td>HTML Blob + application/msword</td><td>時間資產報表_YYYYMM.doc</td><td>✅</td></tr>
+  <tr><td>PDF</td><td>window.print()</td><td>使用者另存</td><td>—</td></tr>
+</table>
+
+<h3>Word 報表必含區段</h3>
+<ol>
+  <li>本月摘要（4 指標：總時數、困難投入值、資產點數、轉換率）</li>
+  <li>本月時間型態觀察</li>
+  <li>努力紀錄清單（完整表格）</li>
+  <li>來月溫和建議</li>
+  <li>生成時間戳記</li>
+</ol>
+
+<h3>Word 樣式規範</h3>
+<ul>
+  <li>字型：Microsoft JhengHei / Noto Sans TC</li>
+  <li>標題色：#1e40af</li>
+  <li>卡片背景：#eff6ff</li>
+  <li><strong>不使用紅色、橘色警示色</strong></li>
+</ul>
+
+<!-- ─── 10 ─────────────────────────────── -->
+<h2>10. 元件開發慣例</h2>
+
+<h3>計算層與 UI 層分離</h3>
+<span class="code">// ✅ 正確：lib/types.ts 負責計算，元件只消費
+const capabilities = calculateCapabilities(records)
+const insights = getWeeklyInsights(records)
+
+// ❌ 錯誤：不在元件內直接計算
+const workHours = records.filter(r => r.category === "工作").reduce(...)
+</span>
+
+<h3>圖表技術選擇</h3>
+<table>
+  <tr><th>情境</th><th>技術</th><th>範例</th></tr>
+  <tr><td>靜態橫條比較</td><td>純 CSS（Tailwind 寬度%）</td><td>CapabilityChart</td></tr>
+  <tr><td>時間序列趨勢</td><td>Recharts</td><td>WeeklyChart</td></tr>
+</table>
+
+<h3>命名規範</h3>
+<ul>
+  <li>元件檔案：kebab-case.tsx（如 <code>daily-completion.tsx</code>）</li>
+  <li>導出：Named export（非 default export）</li>
+  <li>Props interface：元件名 + Props（如 <code>DailyCompletionProps</code>）</li>
+</ul>
+
+<h3>"use client" 規則</h3>
+<p>所有使用 Zustand、useState、useEffect、事件處理的元件，頂部必須加 <code>"use client"</code>。</p>
+
+<!-- ─── 11 ─────────────────────────────── -->
+<h2>11. 規則檔案清單（.cursor/rules/）</h2>
+
+<table>
+  <tr><th>檔案</th><th>alwaysApply</th><th>globs</th><th>用途</th></tr>
+  <tr>
+    <td>project-core.mdc</td><td>✅ true</td><td>—</td>
+    <td>核心架構、資料模型、六維能力、歸因規則</td>
+  </tr>
+  <tr>
+    <td>component-patterns.mdc</td><td>—</td><td>**/*.tsx</td>
+    <td>元件設計規範、配色系統、語言守則</td>
+  </tr>
+  <tr>
+    <td>reflection-insights.mdc</td><td>—</td><td>components/reflection-insights.tsx</td>
+    <td>昨日/本週/本月三個 Tab 的計算與語氣規則</td>
+  </tr>
+  <tr>
+    <td>export-conventions.mdc</td><td>—</td><td>components/export-button.tsx</td>
+    <td>CSV / Word / PDF 匯出規格</td>
+  </tr>
+</table>
+
+<div class="footer">
+  時間資產轉換與生活觀察系統 — 規則文件 v1.0<br>
+  本文件由系統自動生成，反映截至 2026年4月28日 的設計決策。
+</div>
+
+</body>
+</html>

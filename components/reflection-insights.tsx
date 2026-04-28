@@ -1,54 +1,251 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { Metrics } from "@/lib/types"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MessageCircle } from "lucide-react"
+import { format } from "date-fns"
+import { zhTW } from "date-fns/locale"
+import type { Metrics, TimeRecord, YesterdayInsights, WeeklyInsights } from "@/lib/types"
+import {
+  getDailyFeedback, getMonthSuggestions, getMonthTypology,
+  getCompletionInfo, calculateMetrics, getYesterdayInsights, getWeeklyInsights,
+} from "@/lib/types"
 
 interface ReflectionInsightsProps {
   metrics: Metrics
-  yesterdayTrackedHours: number
+  records: TimeRecord[]
 }
 
-export function ReflectionInsights({ metrics, yesterdayTrackedHours }: ReflectionInsightsProps) {
-  const yesterdayMissingHours = Math.max(0, 24 - yesterdayTrackedHours)
+const CATEGORY_COLORS: Record<string, string> = {
+  "工作": "bg-blue-400",
+  "學習": "bg-green-400",
+  "副業": "bg-orange-400",
+  "人際": "bg-amber-400",
+  "休息": "bg-slate-400",
+}
 
-  const focusSuggestions: string[] = []
-  if (metrics.learningHours < 12) {
-    focusSuggestions.push("本月學習時數偏低，建議下月固定每週安排學習時段。")
-  }
-  if (metrics.exerciseHours < 8) {
-    focusSuggestions.push("運動時數偏少，可用短時段運動來提高可持續性。")
-  }
-  if (metrics.relationshipHours < 8) {
-    focusSuggestions.push("人際/家庭投入偏少，建議預留固定陪伴時段。")
-  }
-  if (metrics.potentialOpportunityCostHours >= 20) {
-    focusSuggestions.push("機會成本偏高，建議減少低回報工作與被動休息時數。")
-  }
-  if (focusSuggestions.length === 0) {
-    focusSuggestions.push("時間配置均衡，建議維持目前節奏並持續累積。")
-  }
+// ─── 昨日 Tab ───────────────────────────────
+function YesterdayTab({ insights, records }: { insights: YesterdayInsights; records: TimeRecord[] }) {
+  const completionInfo = getCompletionInfo(insights.trackedHours)
+  const yesterdayRecs = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    const ds = d.toISOString().slice(0, 10)
+    return records.filter(r => r.date === ds)
+  })()
+  const metrics = calculateMetrics(yesterdayRecs)
+  const feedback = getDailyFeedback(metrics, yesterdayRecs)
+
+  // 溫和建議
+  const suggestion = (() => {
+    if (insights.trackedHours === 0) return "今天可以嘗試記錄昨天的時間，讓累積更清晰。"
+    if (!insights.hasRest) return "昨天看起來沒有休息記錄，今天記得給自己一些恢復時間。"
+    if (!insights.hasLearning && !insights.hasWork) return "昨天主要在休息，今天可以加入一點學習或工作的投入。"
+    if (insights.categoryBreakdown.length === 1) return "昨天集中在單一類別，今天可以嘗試加入其他面向的時間。"
+    return "昨天的配置不錯，今天繼續保持這樣的節奏。"
+  })()
+
+  return (
+    <div className="space-y-4">
+      {/* 24小時完整度 */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">昨日記錄完整度</span>
+          <span className={`text-xs font-semibold ${completionInfo.color}`}>
+            {insights.trackedHours.toFixed(1)} / 24 小時
+          </span>
+        </div>
+        <Progress value={completionInfo.rate} className="h-2.5" />
+        <div className="flex justify-between text-[11px] text-muted-foreground">
+          <span>{completionInfo.label}</span>
+          <span>{completionInfo.rate.toFixed(0)}%</span>
+        </div>
+      </div>
+
+      {/* 類別分布 mini-bar */}
+      {insights.categoryBreakdown.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">昨日時間分配</p>
+          {insights.categoryBreakdown.map(({ category, hours }) => (
+            <div key={category} className="flex items-center gap-2">
+              <span className="w-8 text-right text-[11px] text-muted-foreground shrink-0">{category}</span>
+              <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className={`h-full rounded-full ${CATEGORY_COLORS[category] ?? "bg-gray-400"}`}
+                  style={{ width: `${Math.min((hours / 24) * 100, 100)}%` }}
+                />
+              </div>
+              <span className="w-10 text-[11px] text-muted-foreground shrink-0 text-right">{hours}h</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 正向回饋 */}
+      <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
+        <p className="text-sm text-blue-800 leading-relaxed">💡 {feedback}</p>
+      </div>
+
+      {/* 溫和建議 */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+        {suggestion}
+      </div>
+    </div>
+  )
+}
+
+// ─── 本週 Tab ───────────────────────────────
+function WeekTab({ insights, records }: { insights: WeeklyInsights; records: TimeRecord[] }) {
+  const weekRecs = (() => {
+    const now = new Date()
+    const sevenDaysAgo = new Date(now)
+    sevenDaysAgo.setDate(now.getDate() - 6)
+    sevenDaysAgo.setHours(0, 0, 0, 0)
+    return records.filter(r => new Date(r.date + "T00:00:00") >= sevenDaysAgo)
+  })()
+  const weekMetrics = calculateMetrics(weekRecs)
+
+  const mostActiveDayLabel = insights.mostActiveDayDate
+    ? format(new Date(insights.mostActiveDayDate + "T12:00:00"), "M月d日（EEE）", { locale: zhTW })
+    : "—"
+
+  const mainObs = (() => {
+    if (insights.totalHours === 0) return "本週尚無紀錄，隨時可以開始。"
+    if (insights.totalHours > 30) return `本週投入充實，共記錄 ${insights.totalHours.toFixed(1)} 小時，很棒！`
+    if (insights.outputCount > 2) return `本週有 ${insights.outputCount} 筆有成果的活動，累積正在發生。`
+    if (insights.weekRecordCount >= 3) return `本週已記錄 ${insights.weekRecordCount} 筆，保持記錄的習慣很重要。`
+    return `本週開始累積，繼續下去就能看見變化。`
+  })()
+
+  const suggestion = (() => {
+    if (weekMetrics.restHours < 3) return "本週休息時間略少，可以安排一些恢復性活動。"
+    if (weekMetrics.learningHours < 2) return "可以嘗試在本週加入一些學習時間，哪怕每天 20 分鐘。"
+    if (weekMetrics.relationshipHours === 0) return "本週還沒有人際互動的記錄，可以安排一些與家人或朋友的時間。"
+    return "本週節奏不錯，繼續保持。"
+  })()
+
+  return (
+    <div className="space-y-4">
+      {/* 本週總覽數字 */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "本週時數", value: `${insights.totalHours.toFixed(1)}h` },
+          { label: "最投入日", value: mostActiveDayLabel },
+          { label: "有成果", value: `${insights.outputCount} 筆` },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-lg bg-muted/30 p-2.5 text-center">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="text-sm font-semibold mt-0.5">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* 類別時數分布 */}
+      {insights.categoryBreakdown.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">本週時間分配</p>
+          {insights.categoryBreakdown.map(({ category, hours }) => {
+            const pct = insights.totalHours > 0 ? (hours / insights.totalHours) * 100 : 0
+            return (
+              <div key={category} className="flex items-center gap-2">
+                <span className="w-8 text-right text-[11px] text-muted-foreground shrink-0">{category}</span>
+                <div className="flex-1 h-2 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className={`h-full rounded-full ${CATEGORY_COLORS[category] ?? "bg-gray-400"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className="w-14 text-[11px] text-muted-foreground shrink-0 text-right">{hours.toFixed(1)}h ({pct.toFixed(0)}%)</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 本週觀察 */}
+      <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
+        <p className="text-sm text-blue-800 leading-relaxed">💡 {mainObs}</p>
+      </div>
+
+      {/* 本週建議 */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+        {suggestion}
+      </div>
+    </div>
+  )
+}
+
+// ─── 本月 Tab ───────────────────────────────
+function MonthTab({ metrics, records }: { metrics: Metrics; records: TimeRecord[] }) {
+  const typology = getMonthTypology(metrics)
+  const suggestions = getMonthSuggestions(metrics)
+  const dailyFeedback = getDailyFeedback(metrics, records)
+
+  return (
+    <div className="space-y-4">
+      {/* 本月型態描述 */}
+      <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
+        <p className="text-xs font-semibold text-blue-600 mb-1">本月時間型態</p>
+        <p className="text-sm text-blue-800 leading-relaxed">{typology}</p>
+      </div>
+
+      {/* 系統觀察一句話 */}
+      <div className="rounded-lg bg-muted/30 px-4 py-3">
+        <p className="text-sm text-muted-foreground leading-relaxed">💡 {dailyFeedback}</p>
+      </div>
+
+      {/* 本月建議 */}
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground">來月的溫和建議</p>
+        <ul className="space-y-2">
+          {suggestions.map((s, i) => (
+            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+              {s}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+// ─── 主元件 ───────────────────────────────
+export function ReflectionInsights({ metrics, records }: ReflectionInsightsProps) {
+  const yesterdayInsights = getYesterdayInsights(records)
+  const weeklyInsights = getWeeklyInsights(records)
 
   return (
     <Card className="border-border/50">
-      <CardHeader>
-        <CardTitle className="text-base">24小時盤點與月反思</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <MessageCircle className="h-4 w-4 text-blue-500" />
+          觀察與建議
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <p className="text-muted-foreground">
-          昨日已記錄 <span className="font-medium text-foreground">{yesterdayTrackedHours.toFixed(1)} 小時</span>
-          ，尚有{" "}
-          <span className="font-medium text-foreground">{yesterdayMissingHours.toFixed(1)} 小時</span>
-          未盤點。
-        </p>
-        <p className="text-muted-foreground">
-          本月生產力時數 {metrics.productiveHours.toFixed(1)} 小時（{metrics.productiveRatio.toFixed(0)}%）；
-          潛在機會成本約 {metrics.potentialOpportunityCostHours.toFixed(1)} 小時。
-        </p>
-        <div className="space-y-1">
-          {focusSuggestions.map((item) => (
-            <p key={item}>- {item}</p>
-          ))}
-        </div>
+      <CardContent>
+        <Tabs defaultValue="yesterday">
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="yesterday" className="flex-1">昨日</TabsTrigger>
+            <TabsTrigger value="week" className="flex-1">本週</TabsTrigger>
+            <TabsTrigger value="month" className="flex-1">本月</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="yesterday">
+            <YesterdayTab insights={yesterdayInsights} records={records} />
+          </TabsContent>
+
+          <TabsContent value="week">
+            <WeekTab insights={weeklyInsights} records={records} />
+          </TabsContent>
+
+          <TabsContent value="month">
+            <MonthTab metrics={metrics} records={records} />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   )

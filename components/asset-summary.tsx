@@ -1,8 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Sparkles, Coins, Brain } from "lucide-react"
+import { Sparkles, TrendingUp, Brain, Coins } from "lucide-react"
 import type { TimeRecord } from "@/lib/types"
 import { getAssetSummary, getAISummary, calculateMetrics } from "@/lib/types"
 
@@ -19,8 +18,8 @@ export function AssetSummary({ records }: AssetSummaryProps) {
     <Card className="border-border/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4" />
-          資產總結
+          <TrendingUp className="h-4 w-4 text-green-500" />
+          資產累積觀察
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -29,8 +28,8 @@ export function AssetSummary({ records }: AssetSummaryProps) {
             <Brain className="h-4 w-4 text-blue-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">無形資產</p>
-            <p className="text-sm text-muted-foreground">{summary.intangible}</p>
+            <p className="text-sm font-medium text-foreground">無形資產</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{summary.intangible}</p>
           </div>
         </div>
 
@@ -39,18 +38,17 @@ export function AssetSummary({ records }: AssetSummaryProps) {
             <Coins className="h-4 w-4 text-amber-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">有形資產</p>
-            <p className="text-sm text-muted-foreground">{summary.tangible}</p>
+            <p className="text-sm font-medium text-foreground">有形資產</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{summary.tangible}</p>
           </div>
         </div>
 
-        <div className="rounded-lg bg-muted/50 p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              AI 摘要
-            </Badge>
+        <div className="rounded-lg bg-gradient-to-br from-blue-50 to-white border border-blue-100 p-3">
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+            <span className="text-xs font-semibold text-blue-600">系統觀察</span>
           </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm leading-relaxed text-blue-800">
             {aiSummary}
           </p>
         </div>

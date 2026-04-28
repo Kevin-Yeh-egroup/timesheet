@@ -1,0 +1,43 @@
+---
+description: 觀察與建議模組的時間維度規則（昨日/本週/本月）
+globs: components/reflection-insights.tsx
+alwaysApply: false
+---
+
+# 觀察與建議模組規則
+
+## 三個時間維度
+
+`ReflectionInsights` 元件包含三個 Tab，各自邏輯獨立：
+
+### 昨日 Tab
+- 計算來源：`getYesterdayInsights(records)` → `YesterdayInsights`
+- 顯示：24小時完整度進度條、類別橫條圖、正向回饋語句、1條溫和建議
+- 建議優先順序：無休息 > 無學習/工作 > 類別單一 > 預設正向
+
+### 本週 Tab
+- 計算來源：`getWeeklyInsights(records)` → `WeeklyInsights`
+- 顯示：總時數、最投入日、有成果筆數、類別分布橫條、觀察語句、建議
+- 週期定義：今天往前推 6 天（共 7 天），從 `T00:00:00` 起算
+
+### 本月 Tab
+- 計算來源：`calculateMetrics(monthRecords)` + `getMonthTypology` + `getMonthSuggestions`
+- 顯示：時間型態描述、系統觀察一句話、來月溫和建議（最多 3 條）
+
+## 所有建議語句的語氣規則
+
+- 以「可以嘗試」「可以安排」「可以加入」開頭，絕不用「應該」「必須」「太少」
+- 每個 Tab 最多 1 條主要建議，避免讓使用者感到壓力
+- 正向回饋語句（feedbackOptions）在每次渲染時隨機選取，避免重複感
+
+## 計算函式位置
+
+所有推導邏輯放 `lib/types.ts`，元件只做 UI 渲染：
+
+```typescript
+// ✅ 正確
+const insights = getYesterdayInsights(records)
+
+// ❌ 錯誤 — 不在元件內直接過濾日期計算
+const recs = records.filter(r => r.date === yesterday)
+```

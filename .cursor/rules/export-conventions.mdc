@@ -1,0 +1,41 @@
+---
+description: 匯出功能規則（CSV / Word / PDF 列印）
+globs: components/export-button.tsx
+alwaysApply: false
+---
+
+# 匯出功能規則
+
+## 三種格式
+
+| 格式 | 實作方式 | 檔名範例 |
+|------|---------|---------|
+| CSV | Blob + BOM（`\uFEFF`）| `時間資產紀錄_202504.csv` |
+| Word | HTML Blob（`application/msword`）+ BOM | `時間資產報表_202504.doc` |
+| PDF | `window.print()` | 使用者另存 PDF |
+
+## Word 報表必含區段
+
+1. 本月摘要（4 個指標：總時數、困難投入值、資產點數、轉換率）
+2. 本月時間型態觀察（`getMonthTypology`）
+3. 努力紀錄清單（完整表格）
+4. 來月溫和建議（`getMonthSuggestions`）
+
+## Word HTML 樣式規則
+
+- 字型：`"Microsoft JhengHei", "Noto Sans TC", sans-serif`
+- 標題色：`#1e40af`（藍色）
+- 指標卡片背景：`#eff6ff`
+- 不使用紅色或警示色
+- 頁尾加上生成時間戳記
+
+## ExportButton Props
+
+```typescript
+interface ExportButtonProps {
+  records: TimeRecord[]
+  metrics?: Metrics  // 用於 Word 報表的摘要數據
+}
+```
+
+`metrics` 為 optional，有才顯示摘要卡片；無則只輸出紀錄清單。

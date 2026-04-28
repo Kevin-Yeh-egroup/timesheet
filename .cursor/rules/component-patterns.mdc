@@ -1,0 +1,64 @@
+---
+description: React 元件設計慣例、UI 風格與語言規範
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# 元件設計慣例
+
+## UI 風格
+
+- 白底 + 柔和藍色主色（`text-blue-500`、`border-blue-100`、`bg-blue-50`）
+- 卡片式設計，`border-border/50` 或 `border-blue-100`
+- 所有卡片使用 shadcn `<Card>` 元件
+- **禁止**使用 `AlertTriangle`、紅色警示、負面語氣的 icon
+
+## 六維能力配色（需全專案一致）
+
+```typescript
+const CAPABILITY_COLORS = {
+  timeManagement:    { bar: "bg-blue-500",   badge: "bg-blue-100 text-blue-700" },
+  physicalStrength:  { bar: "bg-green-500",  badge: "bg-green-100 text-green-700" },
+  coreSkills:        { bar: "bg-orange-500", badge: "bg-orange-100 text-orange-700" },
+  newSkills:         { bar: "bg-purple-500", badge: "bg-purple-100 text-purple-700" },
+  network:           { bar: "bg-amber-500",  badge: "bg-amber-100 text-amber-700" },
+  knowledge:         { bar: "bg-teal-500",   badge: "bg-teal-100 text-teal-700" },
+}
+```
+
+Recharts 對應色碼：`#3b82f6` / `#22c55e` / `#f97316` / `#a855f7` / `#f59e0b` / `#14b8a6`
+
+## 正向語言範例
+
+| ❌ 避免 | ✅ 使用 |
+|--------|--------|
+| 尚未啟動 | 尚未轉換 |
+| 低回報 | 恢復型 |
+| 機會成本 | 有價值時間 |
+| 偏低 | 可以嘗試增加 |
+| 潛在機會成本 | 資產累積點數 |
+
+## 新增紀錄後的回饋訊息
+
+每次成功新增，必須顯示：
+```
+「這段時間已記錄為你的累積 ✨」
+```
+以 `bg-green-50 border-green-200` 的卡片呈現，持續 4 秒後消失。
+
+## 24小時完整度提示語規則
+
+| 完整度 | 標籤 | 語氣 |
+|-------|------|------|
+| ≥ 100% | 完整記錄 | 正向肯定 |
+| 70–99% | 大致完整 | 溫和肯定 |
+| < 70%  | 可補充 | 邀請而非催促 |
+
+✅ 「今天還有一些時間可以補充記錄，幫助更完整看見一天的配置」
+❌ 「你還沒填滿 24 小時！」
+
+## 元件檔案命名
+
+- 功能元件：`kebab-case.tsx`（如 `daily-completion.tsx`）
+- 所有計算邏輯放 `lib/types.ts`，元件只消費
+- 新增圖表類元件優先用純 CSS 橫條（減少 Recharts 依賴），複雜趨勢圖才用 Recharts

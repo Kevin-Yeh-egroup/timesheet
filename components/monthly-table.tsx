@@ -142,17 +142,17 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
                   <TableCell>
                     <Badge
                       variant={
-                        record.conversionStatus === "已產生收入或成果"
+                        record.conversionStatus === "已有成果"
                           ? "default"
                           : "outline"
                       }
                       className="text-xs"
                     >
-                      {record.conversionStatus === "尚未啟動"
-                        ? "待啟動"
+                      {record.conversionStatus === "尚未轉換"
+                        ? "尚未轉換"
                         : record.conversionStatus === "已開始嘗試"
                         ? "嘗試中"
-                        : "已轉換"}
+                        : "已有成果"}
                     </Badge>
                   </TableCell>
                 </TableRow>

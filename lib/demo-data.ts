@@ -35,7 +35,7 @@ export function buildDemoRecords(): TimeRecord[] {
       hasOutput: true,
       outputDescription: "上架第一支短片",
       assets: ["軟實力", "收入"],
-      conversionStatus: "已產生收入或成果"
+      conversionStatus: "已有成果"
     },
     {
       date: format(subDays(now, 3), "yyyy-MM-dd"),
@@ -45,7 +45,7 @@ export function buildDemoRecords(): TimeRecord[] {
       difficulty: 2,
       hasOutput: false,
       assets: ["軟實力"],
-      conversionStatus: "尚未啟動"
+      conversionStatus: "尚未轉換"
     },
     {
       date: format(subDays(now, 5), "yyyy-MM-dd"),
@@ -55,7 +55,7 @@ export function buildDemoRecords(): TimeRecord[] {
       difficulty: 3,
       hasOutput: false,
       assets: ["體力"],
-      conversionStatus: "尚未啟動"
+      conversionStatus: "尚未轉換"
     },
     {
       date: format(subDays(now, 6), "yyyy-MM-dd"),
@@ -77,7 +77,7 @@ export function buildDemoRecords(): TimeRecord[] {
       hasOutput: true,
       outputDescription: "匯出速度提升 30%",
       assets: ["硬實力", "存款增加"],
-      conversionStatus: "已產生收入或成果"
+      conversionStatus: "已有成果"
     },
     {
       date: format(subDays(now, 10), "yyyy-MM-dd"),
