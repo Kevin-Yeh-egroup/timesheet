@@ -31,6 +31,7 @@ import { CATEGORIES, getDifficultyLabel, getDifficultyColor } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
 import { EditRecordDialog } from "@/components/edit-record-dialog"
 import { toast } from "sonner"
+import { parseDateKey } from "@/lib/date-utils"
 
 interface MonthlyTableProps {
   records: TimeRecord[]
@@ -134,7 +135,7 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
               {sortedRecords.map((record) => (
                 <TableRow key={record.id} className="group">
                   <TableCell className="text-sm">
-                    {format(new Date(record.date), "M/d", { locale: zhTW })}
+                    {format(parseDateKey(record.date), "M/d", { locale: zhTW })}
                   </TableCell>
                   <TableCell className="max-w-[160px] truncate text-sm font-medium">
                     {record.hasOutput && (

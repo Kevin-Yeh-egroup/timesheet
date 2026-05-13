@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { format, parseISO } from "date-fns"
+import { useEffect, useState, type ReactNode } from "react"
+import { format } from "date-fns"
 import { CalendarIcon, Check, Pencil } from "lucide-react"
 import { zhTW } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -17,11 +17,18 @@ import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useTimeRecordStore } from "@/lib/store"
+import { parseDateKey } from "@/lib/date-utils"
 import {
   ALL_ASSETS,
   CATEGORIES,
   CONVERSION_STATUSES,
+  TIME_OPTIONS,
+  calculateHoursFromTimeRange,
+  getDefaultTimeRange,
   getDifficultyLabel,
+  getEndTimeOptions,
+  isValidTimeString,
+  timeStringToMinutes,
   type Asset,
   type Category,
   type ConversionStatus,
@@ -29,13 +36,16 @@ import {
 } from "@/lib/types"
 import { toast } from "sonner"
 
-export function EditRecordDialog({ record }: { record: TimeRecord }) {
+export function EditRecordDialog({ record, trigger }: { record: TimeRecord; trigger?: ReactNode }) {
   const updateRecord = useTimeRecordStore((state) => state.updateRecord)
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date>(parseISO(record.date))
+  const initialTimeRange = getDefaultTimeRange()
+  const [date, setDate] = useState<Date>(parseDateKey(record.date))
   const [activity, setActivity] = useState(record.activity)
   const [category, setCategory] = useState<Category>(record.category)
   const [hours, setHours] = useState(record.hours.toString())
+  const [startTime, setStartTime] = useState(record.startTime ?? initialTimeRange.startTime)
+  const [endTime, setEndTime] = useState(record.endTime ?? initialTimeRange.endTime)
   const [difficulty, setDifficulty] = useState(record.difficulty)
   const [hasOutput, setHasOutput] = useState(record.hasOutput)
   const [outputDescription, setOutputDescription] = useState(record.outputDescription ?? "")
@@ -44,10 +54,13 @@ export function EditRecordDialog({ record }: { record: TimeRecord }) {
 
   useEffect(() => {
     if (!open) return
-    setDate(parseISO(record.date))
+    setDate(parseDateKey(record.date))
     setActivity(record.activity)
     setCategory(record.category)
     setHours(record.hours.toString())
+    const fallback = getDefaultTimeRange()
+    setStartTime(record.startTime ?? fallback.startTime)
+    setEndTime(record.endTime ?? fallback.endTime)
     setDifficulty(record.difficulty)
     setHasOutput(record.hasOutput)
     setOutputDescription(record.outputDescription ?? "")
@@ -59,6 +72,20 @@ export function EditRecordDialog({ record }: { record: TimeRecord }) {
     setAssets((prev) => (prev.includes(asset) ? prev.filter((a) => a !== asset) : [...prev, asset]))
   }
 
+  useEffect(() => {
+    const calculatedHours = calculateHoursFromTimeRange(startTime, endTime)
+    if (calculatedHours !== null) setHours(calculatedHours.toString())
+  }, [startTime, endTime])
+
+  useEffect(() => {
+    const start = timeStringToMinutes(startTime)
+    const end = timeStringToMinutes(endTime)
+    if (start !== null && end !== null && end <= start) {
+      const nextEnd = getEndTimeOptions(startTime)[0]
+      if (nextEnd) setEndTime(nextEnd)
+    }
+  }, [startTime, endTime])
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
     if (!activity.trim()) {
@@ -66,11 +93,19 @@ export function EditRecordDialog({ record }: { record: TimeRecord }) {
       return
     }
 
+    const calculatedHours = calculateHoursFromTimeRange(startTime, endTime)
+    if (!startTime || !endTime || !isValidTimeString(startTime) || !isValidTimeString(endTime) || calculatedHours === null) {
+      toast.error("請選擇開始與結束時段，且結束時間需晚於開始時間")
+      return
+    }
+
     updateRecord(record.id, {
       date: format(date, "yyyy-MM-dd"),
       activity: activity.trim(),
       category,
-      hours: parseFloat(hours) || 1,
+      hours: calculatedHours ?? (parseFloat(hours) || 1),
+      startTime,
+      endTime,
       difficulty,
       hasOutput,
       outputDescription: hasOutput ? outputDescription : undefined,
@@ -84,9 +119,11 @@ export function EditRecordDialog({ record }: { record: TimeRecord }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-          <Pencil className="h-4 w-4" />
-        </Button>
+        {trigger ?? (
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
@@ -106,6 +143,46 @@ export function EditRecordDialog({ record }: { record: TimeRecord }) {
                 <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus />
               </PopoverContent>
             </Popover>
+          </div>
+          <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+            <div>
+              <Label>時段</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                請選擇開始與結束時間；系統會自動換算時數。
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={`start-time-${record.id}`} className="text-xs text-muted-foreground">開始</Label>
+                <Select value={startTime} onValueChange={setStartTime}>
+                  <SelectTrigger id={`start-time-${record.id}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.slice(0, -1).map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`end-time-${record.id}`} className="text-xs text-muted-foreground">結束</Label>
+                <Select value={endTime} onValueChange={setEndTime}>
+                  <SelectTrigger id={`end-time-${record.id}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getEndTimeOptions(startTime).map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor={`activity-${record.id}`}>活動內容</Label>
@@ -155,7 +232,7 @@ export function EditRecordDialog({ record }: { record: TimeRecord }) {
                 <Badge
                   key={asset}
                   variant={assets.includes(asset) ? "default" : "outline"}
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-all active:scale-95"
                   onClick={() => toggleAsset(asset)}
                 >
                   {assets.includes(asset) && <Check className="mr-1 h-3 w-3" />}

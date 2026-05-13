@@ -9,10 +9,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
 import type { Category, TimeRecord } from "@/lib/types"
-import { CATEGORIES, getDifficultyLabel, getDifficultyColor } from "@/lib/types"
+import { CATEGORIES, getDifficultyLabel, getDifficultyColor, getRecordTimeLabel } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
 import { EditRecordDialog } from "@/components/edit-record-dialog"
 import { toast } from "sonner"
+import { parseDateKey } from "@/lib/date-utils"
 
 interface RecordsListProps {
   records: TimeRecord[]
@@ -145,9 +146,10 @@ export function RecordsList({ records, showDate = true, enableCategoryFilter = f
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {showDate && (
                   <span>
-                    {format(new Date(record.date), "M/d (EEE)", { locale: zhTW })}
+                    {format(parseDateKey(record.date), "M/d (EEE)", { locale: zhTW })}
                   </span>
                 )}
+                <span>{getRecordTimeLabel(record)}</span>
                 <span>{record.hours} 小時</span>
                 <span className="flex items-center gap-1">
                   {record.hasOutput ? (

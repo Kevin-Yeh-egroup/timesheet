@@ -1,3 +1,5 @@
+import { getYesterday, toDateKey } from "@/lib/date-utils"
+
 export type Category = "工作" | "學習" | "副業" | "人際" | "休息" | "鍛鍊"
 
 export type TimeValueType = "成長型" | "生產型" | "恢復型" | "關係型" | "彈性型"
@@ -14,6 +16,8 @@ export interface TimeRecord {
   activity: string
   category: Category
   hours: number
+  startTime?: string
+  endTime?: string
   difficulty: number // 1-5
   hasOutput: boolean
   outputDescription?: string
@@ -52,6 +56,66 @@ export const CONVERSION_STATUSES: ConversionStatus[] = [
   "已開始嘗試",
   "已有成果"
 ]
+
+export const TIME_OPTIONS: string[] = Array.from({ length: 49 }, (_, index) => {
+  const totalMinutes = index * 30
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
+})
+
+export function isValidTimeString(value: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value) || value === "24:00"
+}
+
+export function timeStringToMinutes(value: string): number | null {
+  if (!isValidTimeString(value)) return null
+  const [hours, minutes] = value.split(":").map(Number)
+  return hours * 60 + minutes
+}
+
+export function minutesToTimeString(totalMinutes: number): string {
+  const clamped = Math.min(Math.max(totalMinutes, 0), 24 * 60)
+  const hours = Math.floor(clamped / 60)
+  const minutes = clamped % 60
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
+}
+
+export function calculateHoursFromTimeRange(startTime?: string, endTime?: string): number | null {
+  if (!startTime || !endTime) return null
+  const start = timeStringToMinutes(startTime)
+  const end = timeStringToMinutes(endTime)
+  if (start === null || end === null || end <= start) return null
+  return Math.round(((end - start) / 60) * 2) / 2
+}
+
+export function getEndTimeOptions(startTime: string): string[] {
+  const start = timeStringToMinutes(startTime)
+  if (start === null) return TIME_OPTIONS.slice(1)
+  return TIME_OPTIONS.filter((option) => {
+    const minutes = timeStringToMinutes(option)
+    return minutes !== null && minutes > start
+  })
+}
+
+export function getDefaultTimeRange(referenceDate = new Date()): { startTime: string; endTime: string } {
+  const roundedMinutes = Math.floor((referenceDate.getHours() * 60 + referenceDate.getMinutes()) / 30) * 30
+  const startMinutes = Math.min(Math.max(roundedMinutes, 0), 23 * 60)
+  const endMinutes = Math.min(startMinutes + 60, 24 * 60)
+  return {
+    startTime: minutesToTimeString(startMinutes),
+    endTime: minutesToTimeString(endMinutes),
+  }
+}
+
+export function hasRecordTimeRange(record: Pick<TimeRecord, "startTime" | "endTime">): boolean {
+  return calculateHoursFromTimeRange(record.startTime, record.endTime) !== null
+}
+
+export function getRecordTimeLabel(record: Pick<TimeRecord, "startTime" | "endTime">): string {
+  if (!hasRecordTimeRange(record)) return "尚未指定時段"
+  return `${record.startTime}–${record.endTime}`
+}
 
 export function getTimeValueType(category: Category): TimeValueType {
   switch (category) {
@@ -187,7 +251,7 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
 }
 
 export function calculateTrackedHoursByDate(records: TimeRecord[], date: Date): number {
-  const targetDate = date.toISOString().slice(0, 10)
+  const targetDate = toDateKey(date)
   return records
     .filter((r) => r.date === targetDate)
     .reduce((sum, r) => sum + r.hours, 0)
@@ -530,9 +594,7 @@ export interface WeeklyInsights {
 }
 
 export function getYesterdayInsights(records: TimeRecord[]): YesterdayInsights {
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  const dateStr = yesterday.toISOString().slice(0, 10)
+  const dateStr = toDateKey(getYesterday())
   const recs = records.filter(r => r.date === dateStr)
   const trackedHours = recs.reduce((s, r) => s + r.hours, 0)
 

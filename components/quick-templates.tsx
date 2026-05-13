@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useTimeRecordStore } from "@/lib/store"
 import type { Category, Asset } from "@/lib/types"
+import { calculateHoursFromTimeRange, getDefaultTimeRange, minutesToTimeString, timeStringToMinutes } from "@/lib/types"
 import { toast } from "sonner"
 
 interface QuickTemplate {
@@ -26,15 +27,21 @@ const QUICK_TEMPLATES: QuickTemplate[] = [
   { category: "休息", activity: "充分休息", hours: 1, difficulty: 1, assets: ["體力"] },
 ]
 
-export function QuickTemplates() {
+export function QuickTemplates({ initialDate }: { initialDate?: Date }) {
   const addRecord = useTimeRecordStore((state) => state.addRecord)
 
   const handleQuickAdd = (template: QuickTemplate) => {
+    const fallback = getDefaultTimeRange()
+    const start = timeStringToMinutes(fallback.startTime) ?? 9 * 60
+    const endTime = minutesToTimeString(Math.min(start + template.hours * 60, 24 * 60))
+    const calculatedHours = calculateHoursFromTimeRange(fallback.startTime, endTime)
     addRecord({
-      date: format(new Date(), "yyyy-MM-dd"),
+      date: format(initialDate ?? new Date(), "yyyy-MM-dd"),
       activity: template.activity,
       category: template.category,
-      hours: template.hours,
+      hours: calculatedHours ?? template.hours,
+      startTime: fallback.startTime,
+      endTime,
       difficulty: template.difficulty,
       hasOutput: false,
       assets: template.assets,
@@ -57,7 +64,7 @@ export function QuickTemplates() {
             <Badge
               key={template.activity}
               variant="outline"
-              className="cursor-pointer px-3 py-1.5 transition-colors hover:bg-accent"
+              className="cursor-pointer px-3 py-1.5 transition-all hover:bg-accent active:scale-95"
               onClick={() => handleQuickAdd(template)}
             >
               {template.activity} ({template.hours}h)

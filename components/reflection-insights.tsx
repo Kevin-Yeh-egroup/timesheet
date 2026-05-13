@@ -11,6 +11,7 @@ import {
   getDailyFeedback, getMonthSuggestions, getMonthTypology,
   getCompletionInfo, calculateMetrics, getYesterdayInsights, getWeeklyInsights,
 } from "@/lib/types"
+import { getYesterday, toDateKey } from "@/lib/date-utils"
 
 interface ReflectionInsightsProps {
   metrics: Metrics
@@ -30,9 +31,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 function YesterdayTab({ insights, records }: { insights: YesterdayInsights; records: TimeRecord[] }) {
   const completionInfo = getCompletionInfo(insights.trackedHours)
   const yesterdayRecs = (() => {
-    const d = new Date()
-    d.setDate(d.getDate() - 1)
-    const ds = d.toISOString().slice(0, 10)
+    const ds = toDateKey(getYesterday())
     return records.filter(r => r.date === ds)
   })()
   const metrics = calculateMetrics(yesterdayRecs)

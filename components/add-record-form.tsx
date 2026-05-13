@@ -21,6 +21,12 @@ import {
   CATEGORIES,
   ALL_ASSETS,
   CONVERSION_STATUSES,
+  TIME_OPTIONS,
+  calculateHoursFromTimeRange,
+  getDefaultTimeRange,
+  getEndTimeOptions,
+  isValidTimeString,
+  timeStringToMinutes,
   type Category,
   type Asset,
   type ConversionStatus,
@@ -45,13 +51,28 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   "鍛鍊": "🏃",
 }
 
-export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult | null; onSuccess?: () => void }) {
+export function AddRecordForm({
+  prefill,
+  initialDate,
+  initialStartTime,
+  initialEndTime,
+  onSuccess,
+}: {
+  prefill?: AIParsedResult | null
+  initialDate?: Date
+  initialStartTime?: string
+  initialEndTime?: string
+  onSuccess?: () => void
+}) {
   const addRecord = useTimeRecordStore((state) => state.addRecord)
 
-  const [date, setDate] = useState<Date>(new Date())
+  const [date, setDate] = useState<Date>(initialDate ?? new Date())
+  const initialTimeRange = getDefaultTimeRange()
   const [activity, setActivity] = useState("")
   const [category, setCategory] = useState<Category>("學習")
   const [hours, setHours] = useState("1")
+  const [startTime, setStartTime] = useState(initialStartTime ?? initialTimeRange.startTime)
+  const [endTime, setEndTime] = useState(initialEndTime ?? initialTimeRange.endTime)
   const [difficulty, setDifficulty] = useState(3)
   const [hasOutput, setHasOutput] = useState(false)
   const [outputDescription, setOutputDescription] = useState("")
@@ -61,17 +82,44 @@ export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult
   const [justAdded, setJustAdded] = useState(false)
 
   useEffect(() => {
+    if (initialDate) setDate(initialDate)
+  }, [initialDate])
+
+  useEffect(() => {
+    const fallback = getDefaultTimeRange()
+    setStartTime(initialStartTime ?? fallback.startTime)
+    setEndTime(initialEndTime ?? fallback.endTime)
+  }, [initialStartTime, initialEndTime])
+
+  useEffect(() => {
+    const calculatedHours = calculateHoursFromTimeRange(startTime, endTime)
+    if (calculatedHours !== null) setHours(calculatedHours.toString())
+  }, [startTime, endTime])
+
+  useEffect(() => {
+    const start = timeStringToMinutes(startTime)
+    const end = timeStringToMinutes(endTime)
+    if (start !== null && end !== null && end <= start) {
+      const nextEnd = getEndTimeOptions(startTime)[0]
+      if (nextEnd) setEndTime(nextEnd)
+    }
+  }, [startTime, endTime])
+
+  useEffect(() => {
     if (!prefill) return
-    setDate(new Date())
+    setDate(initialDate ?? new Date())
     setActivity(prefill.activity)
     setCategory(prefill.category)
     setHours(prefill.hours.toString())
+    const fallback = getDefaultTimeRange()
+    setStartTime(prefill.startTime ?? initialStartTime ?? fallback.startTime)
+    setEndTime(prefill.endTime ?? initialEndTime ?? fallback.endTime)
     setDifficulty(prefill.difficulty)
     setHasOutput(prefill.hasOutput)
     setOutputDescription(prefill.outputDescription ?? "")
     setAssets(prefill.assets)
     setConversionStatus(prefill.conversionStatus)
-  }, [prefill])
+  }, [prefill, initialDate, initialStartTime, initialEndTime])
 
   const toggleAsset = (asset: Asset) => {
     setAssets((prev) =>
@@ -86,13 +134,21 @@ export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult
       return
     }
 
+    const calculatedHours = calculateHoursFromTimeRange(startTime, endTime)
+    if (!startTime || !endTime || !isValidTimeString(startTime) || !isValidTimeString(endTime) || calculatedHours === null) {
+      toast.error("請選擇開始與結束時段，且結束時間需晚於開始時間")
+      return
+    }
+
     setIsSubmitting(true)
 
     addRecord({
       date: format(date, "yyyy-MM-dd"),
       activity: activity.trim(),
       category,
-      hours: parseFloat(hours) || 1,
+      hours: calculatedHours ?? (parseFloat(hours) || 1),
+      startTime,
+      endTime,
       difficulty,
       hasOutput,
       outputDescription: hasOutput ? outputDescription : undefined,
@@ -101,8 +157,11 @@ export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult
     })
 
     // Reset form
+    const fallback = getDefaultTimeRange()
     setActivity("")
     setHours("1")
+    setStartTime(fallback.startTime)
+    setEndTime(fallback.endTime)
     setDifficulty(3)
     setHasOutput(false)
     setOutputDescription("")
@@ -163,6 +222,47 @@ export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+            <div>
+              <Label>時段</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                請選擇開始與結束時間，系統會自動換算時數。
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="startTime" className="text-xs text-muted-foreground">開始</Label>
+                <Select value={startTime} onValueChange={setStartTime}>
+                  <SelectTrigger id="startTime">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.slice(0, -1).map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="endTime" className="text-xs text-muted-foreground">結束</Label>
+                <Select value={endTime} onValueChange={setEndTime}>
+                  <SelectTrigger id="endTime">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getEndTimeOptions(startTime).map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {/* Activity */}
@@ -237,7 +337,7 @@ export function AddRecordForm({ prefill, onSuccess }: { prefill?: AIParsedResult
                 <Badge
                   key={asset}
                   variant={assets.includes(asset) ? "default" : "outline"}
-                  className="cursor-pointer transition-colors"
+                  className="cursor-pointer transition-all active:scale-95"
                   onClick={() => toggleAsset(asset)}
                 >
                   {assets.includes(asset) && <Check className="mr-1 h-3 w-3" />}

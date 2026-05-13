@@ -4,6 +4,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { TimeRecord } from "./types"
 import { buildDemoRecords } from "./demo-data"
+import { parseDateKey } from "./date-utils"
 
 interface TimeRecordStore {
   records: TimeRecord[]
@@ -57,7 +58,7 @@ export const useTimeRecordStore = create<TimeRecordStore>()(
       getMonthRecords: (year, month) => {
         const records = get().records
         return records.filter((r) => {
-          const date = new Date(r.date)
+          const date = parseDateKey(r.date)
           return date.getFullYear() === year && date.getMonth() === month
         })
       }

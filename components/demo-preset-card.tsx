@@ -1,7 +1,7 @@
 "use client"
 
 import { Sparkles } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useTimeRecordStore } from "@/lib/store"
 import { toast } from "sonner"
@@ -22,24 +22,30 @@ export function DemoPresetCard() {
   }
 
   return (
-    <Card className="border-primary/30 bg-primary/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4" />
-          Demo 快速場景
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          一鍵載入 7 筆範例紀錄（含工作、學習、副業、人際、休息、鍛鍊），可立即展示總覽與報表。
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={handleLoadDemo}>載入 Demo 資料</Button>
-          <Button variant="outline" onClick={handleReset}>
-            清空資料
-          </Button>
+    <Card className="border-primary/20 bg-primary/5">
+      <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-2">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">第一次使用？可以先看一組示範案例</p>
+            <p className="text-xs text-muted-foreground">
+              載入範例紀錄，快速觀察總覽、報表與時間累積呈現。
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground">目前共有 {records.length} 筆紀錄</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            目前 {records.length} 筆
+          </span>
+          <Button size="sm" onClick={handleLoadDemo}>
+            載入示範案例
+          </Button>
+          {records.length > 0 && (
+            <Button size="sm" variant="ghost" onClick={handleReset}>
+              清空
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
