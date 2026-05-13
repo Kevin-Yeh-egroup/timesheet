@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
-import { BarChart3, Clock, ListChecks, MessageCircle, Plus, Sparkles } from "lucide-react"
+import { BarChart3, BookOpen, Clock, ListChecks, MessageCircle, Plus, Sparkles } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { MetricsCards } from "@/components/metrics-cards"
 import { RecordsList } from "@/components/records-list"
@@ -18,6 +18,7 @@ import { useTimeRecordStore } from "@/lib/store"
 import { calculateMetrics, calculateTrackedHoursByDate } from "@/lib/types"
 
 const featureLinks = [
+  { href: "/guide", title: "使用說明", description: "了解時間如何逐步累積成資產", icon: BookOpen },
   { href: "/time", title: "時段盤點", description: "看見 24 小時哪些時段已被記錄", icon: Clock },
   { href: "/ai", title: "AI 整理", description: "用語音或文字快速整理時間", icon: Sparkles },
   { href: "/insights", title: "摘要與提醒", description: "回顧昨日、週期摘要與提醒", icon: MessageCircle },
@@ -72,10 +73,18 @@ export default function DashboardPage() {
               {format(now, "yyyy年M月", { locale: zhTW })} · 共 {monthRecords.length} 筆紀錄 · 看見你的累積
             </p>
           </div>
-          <Button className="hidden shrink-0 gap-2 md:flex" onClick={openAddRecordToday}>
-            <Plus className="h-4 w-4" />
-            新增紀錄
-          </Button>
+          <div className="hidden shrink-0 gap-2 md:flex">
+            <Button asChild variant="outline">
+              <Link href="/guide">
+                <BookOpen className="h-4 w-4" />
+                使用說明
+              </Link>
+            </Button>
+            <Button className="gap-2" onClick={openAddRecordToday}>
+              <Plus className="h-4 w-4" />
+              新增紀錄
+            </Button>
+          </div>
         </header>
 
         <DemoPresetCard />
