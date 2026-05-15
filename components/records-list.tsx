@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
 import type { Category, TimeRecord } from "@/lib/types"
-import { CATEGORIES, getDifficultyLabel, getDifficultyColor, getRecordTimeLabel } from "@/lib/types"
+import { CATEGORIES, CATEGORY_EMOJIS, getDifficultyLabel, getDifficultyColor, getPrimaryCategory, getRecordTimeLabel } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
 import { EditRecordDialog } from "@/components/edit-record-dialog"
 import { toast } from "sonner"
@@ -28,7 +28,7 @@ export function RecordsList({ records, showDate = true, enableCategoryFilter = f
   const [activeCategory, setActiveCategory] = useState<Category | "全部">("全部")
   const visibleRecords = useMemo(() => {
     const filtered =
-      activeCategory === "全部" ? records : records.filter((record) => record.category === activeCategory)
+      activeCategory === "全部" ? records : records.filter((record) => getPrimaryCategory(record.category) === activeCategory)
     return filtered.slice(0, 10)
   }, [records, activeCategory])
 
@@ -136,7 +136,7 @@ export function RecordsList({ records, showDate = true, enableCategoryFilter = f
             <div className="flex-1 space-y-1.5">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {record.category}
+                  {CATEGORY_EMOJIS[record.category]} {getPrimaryCategory(record.category)}
                 </Badge>
                 <span className={`text-xs ${getDifficultyColor(record.difficulty)}`}>
                   {getDifficultyLabel(record.difficulty)}
@@ -157,7 +157,7 @@ export function RecordsList({ records, showDate = true, enableCategoryFilter = f
                   ) : (
                     <Circle className="h-3 w-3" />
                   )}
-                  {record.hasOutput ? "有產出" : "無產出"}
+                  {record.hasOutput ? "有留下" : "持續累積"}
                 </span>
               </div>
               {record.assets.length > 0 && (

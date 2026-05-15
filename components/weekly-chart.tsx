@@ -8,6 +8,7 @@ import {
 import { format, subDays } from "date-fns"
 import { zhTW } from "date-fns/locale"
 import type { TimeRecord } from "@/lib/types"
+import { getPrimaryCategory } from "@/lib/types"
 import type { TooltipProps } from "recharts"
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent"
 
@@ -17,47 +18,57 @@ interface WeeklyChartProps {
 
 // 六維能力定義：名稱、顏色、每筆紀錄的時數歸因函式
 // 歸因規則確保同一天的時數合計 ≈ 當日實際總時數（無重複計算）
-// 休息 + 鍛鍊 → 增加體力；工作 → 調整時間 30% + 強化能力 70%
+const exerciseKeywords = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
+const learningKeywords = ["學習", "閱讀", "讀書", "課程", "研究", "證照", "聽課"]
+const sideKeywords = ["副業", "創作", "寫作", "拍片", "社群", "接案", "作品"]
+
+// 恢復 → 增加體力；做事 → 調整時間 + 強化能力；探索 → 技能/知識
 const CAPABILITIES = [
   {
     key: "調整時間",
     color: "#3b82f6",
     emoji: "⏱️",
-    getHours: (r: TimeRecord) => r.category === "工作" ? r.hours * 0.3 : 0,
+    getHours: (r: TimeRecord) => getPrimaryCategory(r.category) === "做事" ? r.hours * 0.3 : 0,
   },
   {
     key: "增加體力",
     color: "#22c55e",
     emoji: "💪",
     getHours: (r: TimeRecord) =>
-      r.category === "休息" || r.category === "鍛鍊" ? r.hours : 0,
+      getPrimaryCategory(r.category) === "恢復" ? r.hours : 0,
   },
   {
     key: "強化能力",
     color: "#f97316",
     emoji: "🧱",
-    getHours: (r: TimeRecord) => r.category === "工作" ? r.hours * 0.7 : 0,
+    getHours: (r: TimeRecord) => getPrimaryCategory(r.category) === "做事" ? r.hours * 0.7 : 0,
   },
   {
     key: "增加技能",
     color: "#a855f7",
     emoji: "📚",
     getHours: (r: TimeRecord) =>
-      r.category === "副業" ? r.hours
-      : r.category === "學習" ? r.hours * 0.5
+      sideKeywords.some(k => r.activity.includes(k)) ? r.hours
+      : getPrimaryCategory(r.category) === "探索" ? r.hours * 0.5
       : 0,
   },
   {
     key: "運用人脈",
     color: "#f59e0b",
     emoji: "🤝",
-    getHours: (r: TimeRecord) => r.category === "人際" ? r.hours : 0,
+    getHours: (r: TimeRecord) =>
+      getPrimaryCategory(r.category) === "連結" || getPrimaryCategory(r.category) === "照顧" ? r.hours : 0,
   },
   {
     key: "增加知識",
     color: "#14b8a6",
     emoji: "💡",
-    getHours: (r: TimeRecord) => r.category === "學習" ? r.hours * 0.5 : 0,
+    getHours: (r: TimeRecord) =>
+      learningKeywords.some(k => r.activity.includes(k)) || getPrimaryCategory(r.category) === "探索"
+        ? r.hours * 0.5
+        : exerciseKeywords.some(k => r.activity.includes(k))
+          ? 0
+          : 0,
   },
 ] as const
 

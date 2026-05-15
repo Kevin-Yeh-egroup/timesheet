@@ -1,5 +1,13 @@
 import type { Asset, Category, ConversionStatus } from "@/lib/types"
-import { calculateHoursFromTimeRange, isValidTimeString, minutesToTimeString } from "@/lib/types"
+import {
+  ALL_ASSETS,
+  CATEGORIES,
+  CONVERSION_STATUSES,
+  calculateHoursFromTimeRange,
+  isValidTimeString,
+  minutesToTimeString,
+  suggestAssetsForRecord,
+} from "@/lib/types"
 
 export interface AIParsedResult {
   activity: string
@@ -25,24 +33,19 @@ export interface AIParseResult {
   records: AIParsedResult[]
 }
 
-const CATEGORIES: Category[] = ["工作", "學習", "副業", "人際", "休息", "鍛鍊"]
-const ASSETS: Asset[] = ["體力", "軟實力", "硬實力", "存款增加", "收入", "工具/副業基礎"]
-const CONVERSION_STATUSES: ConversionStatus[] = ["尚未轉換", "已開始嘗試", "已有成果"]
-
 const KEYWORD_MAP: Array<{ category: Category; words: string[] }> = [
-  { category: "工作", words: ["上班", "客戶", "會議", "需求", "報告", "提案", "專案", "工作", "辦公"] },
-  { category: "學習", words: ["學習", "閱讀", "課程", "練習", "研究", "讀書", "看書", "進修", "備課"] },
-  { category: "副業", words: ["副業", "社群", "內容", "寫作", "拍片", "接案", "創作", "接稿", "接單"] },
-  { category: "人際", words: ["朋友", "家人", "孩子", "伴侶", "交流", "聚會", "拜訪", "陪", "相處", "聊天"] },
-  { category: "鍛鍊", words: ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步", "游泳", "騎車", "鍛鍊", "體能", "球", "爬山"] },
-  { category: "休息", words: ["休息", "睡", "放空", "放鬆", "冥想", "午休", "躺"] },
+  { category: "做事", words: ["上班", "客戶", "會議", "需求", "報告", "提案", "專案", "工作", "辦公", "通勤", "繳費", "銀行", "辦文件"] },
+  { category: "照顧", words: ["家事", "煮飯", "備餐", "打掃", "整理", "買菜", "小孩", "孩子", "長輩", "寵物", "陪診"] },
+  { category: "恢復", words: ["休息", "睡", "放空", "放鬆", "冥想", "午休", "躺", "運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步", "看診", "復健"] },
+  { category: "連結", words: ["朋友", "家人", "伴侶", "交流", "聚會", "拜訪", "陪", "相處", "聊天", "社區", "志工", "宗教"] },
+  { category: "探索", words: ["學習", "閱讀", "課程", "練習", "研究", "讀書", "看書", "進修", "備課", "副業", "社群", "寫作", "拍片", "接案", "創作"] },
 ]
 
 function detectCategory(text: string): Category {
   const normalized = text.toLowerCase()
   return KEYWORD_MAP.find((item) =>
     item.words.some((word) => normalized.includes(word))
-  )?.category ?? "工作"
+  )?.category ?? "做事"
 }
 
 function extractHours(text: string): number {
@@ -119,11 +122,8 @@ function parseSegment(seg: string): AIParsedResult {
   )
   const conversionStatus: ConversionStatus = hasOutput ? "已開始嘗試" : "尚未轉換"
 
-  const assets: Asset[] = []
-  if (["學習", "副業", "工作"].includes(category)) assets.push("硬實力")
-  if (["人際", "副業"].includes(category)) assets.push("軟實力")
-  if (category === "休息" || category === "鍛鍊") assets.push("體力")
-  if (hasOutput) assets.push("工具/副業基礎")
+  const assets = suggestAssetsForRecord(category, seg)
+  if (hasOutput && !assets.includes("作品成果")) assets.push("作品成果")
 
   return {
     activity: extractActivity(seg) || category,
@@ -158,12 +158,12 @@ function clampHours(hours: number): number {
 }
 
 function normalizeRecord(record: Partial<AIParsedResult>, fallbackText: string): AIParsedResult {
-  const category = CATEGORIES.includes(record.category as Category)
+  const category = CATEGORIES.includes(record.category as (typeof CATEGORIES)[number])
     ? record.category as Category
     : detectCategory(record.activity || fallbackText)
 
   const assets = Array.isArray(record.assets)
-    ? Array.from(new Set(record.assets.filter((asset): asset is Asset => ASSETS.includes(asset as Asset))))
+    ? Array.from(new Set(record.assets.filter((asset): asset is Asset => ALL_ASSETS.includes(asset as Asset))))
     : []
 
   const hasOutput = Boolean(record.hasOutput)
@@ -210,8 +210,8 @@ async function parseWithGemini(rawInput: string, apiKey: string): Promise<AIPars
                 text: [
                   "你是時間資產轉換系統的整理助手。",
                   "請把使用者輸入的中文語音轉文字或文字描述，整理成一到多筆時間紀錄。",
-                  "分類只能是：工作、學習、副業、人際、休息、鍛鍊。",
-                  "assets 只能從：體力、軟實力、硬實力、存款增加、收入、工具/副業基礎 中選擇，可為空陣列。",
+                  "分類只能是：做事、照顧、恢復、連結、探索。",
+                  "assets 請從系統提供的資產標籤中選擇，可為空陣列，優先使用生活化標籤如體力健康、知識理解、人際連結、照顧能力、生活掌控感、作品成果。",
                   "difficulty 是 1 到 5，語氣保持觀察與支持，不要使用評分、扣分、浪費、低效等概念。",
                   "conversionStatus 只能是：尚未轉換、已開始嘗試、已有成果。",
                   "若輸入包含多個事件，請拆成多筆 records。",
@@ -239,7 +239,7 @@ async function parseWithGemini(rawInput: string, apiKey: string): Promise<AIPars
                     startTime: { type: "STRING" },
                     endTime: { type: "STRING" },
                     difficulty: { type: "NUMBER" },
-                    assets: { type: "ARRAY", items: { type: "STRING", enum: ASSETS } },
+                    assets: { type: "ARRAY", items: { type: "STRING", enum: ALL_ASSETS } },
                     hasOutput: { type: "BOOLEAN" },
                     conversionStatus: { type: "STRING", enum: CONVERSION_STATUSES },
                     outputDescription: { type: "STRING" },

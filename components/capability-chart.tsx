@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Zap } from "lucide-react"
 import type { TimeRecord } from "@/lib/types"
-import { calculateCapabilities } from "@/lib/types"
+import { calculateCapabilities, getPrimaryCategory } from "@/lib/types"
 
 interface CapabilityChartProps {
   records: TimeRecord[]
@@ -15,80 +15,78 @@ const CAPABILITY_HOUR_CONFIG = [
     id: "timeManagement",
     name: "調整時間",
     emoji: "⏱️",
-    sources: ["工作"],
+    sources: ["做事"],
     colorBar: "bg-blue-500",
     colorBg: "bg-blue-50",
     colorText: "text-blue-700",
     colorBadge: "bg-blue-100 text-blue-600",
-    getHours: (r: TimeRecord) => r.category === "工作" ? r.hours * 0.4 : 0,
-    hint: "工作時間培養時間調配與優先順序判斷",
+    getHours: (r: TimeRecord) => getPrimaryCategory(r.category) === "做事" ? r.hours * 0.4 : 0,
+    hint: "做事時間培養時間調配與優先順序判斷",
   },
   {
     id: "physicalStrength",
     name: "增加體力",
     emoji: "💪",
-    sources: ["休息", "鍛鍊"],
+    sources: ["恢復"],
     colorBar: "bg-green-500",
     colorBg: "bg-green-50",
     colorText: "text-green-700",
     colorBadge: "bg-green-100 text-green-600",
     getHours: (r: TimeRecord) =>
-      r.category === "休息" || r.category === "鍛鍊" ? r.hours : 0,
-    hint: "休息恢復精力；鍛鍊主動強化體能，共同累積體力資本",
+      getPrimaryCategory(r.category) === "恢復" ? r.hours : 0,
+    hint: "休息、運動與看診等恢復時間，正在累積體力與穩定節奏",
   },
   {
     id: "coreSkills",
     name: "強化能力",
     emoji: "🧱",
-    sources: ["工作"],
+    sources: ["做事"],
     colorBar: "bg-orange-500",
     colorBg: "bg-orange-50",
     colorText: "text-orange-700",
     colorBadge: "bg-orange-100 text-orange-600",
-    getHours: (r: TimeRecord) => r.category === "工作" ? r.hours * 0.6 : 0,
-    hint: "工作中的挑戰與產出直接強化核心執行能力",
+    getHours: (r: TimeRecord) => getPrimaryCategory(r.category) === "做事" ? r.hours * 0.6 : 0,
+    hint: "做事中的挑戰與完成，會逐步強化核心執行能力",
   },
   {
     id: "newSkills",
     name: "增加技能",
     emoji: "📚",
-    sources: ["學習", "副業"],
+    sources: ["探索"],
     colorBar: "bg-purple-500",
     colorBg: "bg-purple-50",
     colorText: "text-purple-700",
     colorBadge: "bg-purple-100 text-purple-600",
     getHours: (r: TimeRecord) =>
-      r.category === "學習" ? r.hours * 0.5
-      : r.category === "副業" ? r.hours * 0.8
+      getPrimaryCategory(r.category) === "探索" ? r.hours * 0.7
       : 0,
-    hint: "學習與副業時間最直接轉化為新技能積累",
+    hint: "閱讀、課程、創作與副業準備，會逐步轉化為新技能",
   },
   {
     id: "network",
     name: "運用人脈",
     emoji: "🤝",
-    sources: ["人際", "副業"],
+    sources: ["連結", "照顧"],
     colorBar: "bg-amber-500",
     colorBg: "bg-amber-50",
     colorText: "text-amber-700",
     colorBadge: "bg-amber-100 text-amber-600",
     getHours: (r: TimeRecord) =>
-      r.category === "人際" ? r.hours
-      : r.category === "副業" ? r.hours * 0.2
+      getPrimaryCategory(r.category) === "連結" || getPrimaryCategory(r.category) === "照顧" ? r.hours
       : 0,
-    hint: "人際與副業時間建立信任、拓展連結",
+    hint: "陪伴、照顧、社區與朋友互動都在建立支持與信任",
   },
   {
     id: "knowledge",
     name: "增加知識",
     emoji: "💡",
-    sources: ["學習"],
+    sources: ["探索"],
     colorBar: "bg-teal-500",
     colorBg: "bg-teal-50",
     colorText: "text-teal-700",
     colorBadge: "bg-teal-100 text-teal-600",
-    getHours: (r: TimeRecord) => r.category === "學習" ? r.hours * 0.5 : 0,
-    hint: "深度學習時間轉化為洞察力與知識資產",
+    getHours: (r: TimeRecord) => getPrimaryCategory(r.category) === "探索" ? r.hours * 0.5 : 0,
+    hint: "探索時間轉化為理解、洞察與知識資產",
   },
 ]
 

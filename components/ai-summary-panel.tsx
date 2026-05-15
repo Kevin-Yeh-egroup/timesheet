@@ -25,6 +25,12 @@ const PERIOD_LABELS: Record<SummaryInsight["period"], string> = {
   year: "年回顧",
 }
 
+function stripRepeatedPeriodLabel(summary: string, periodLabel: string) {
+  return summary
+    .replace(new RegExp(`^${periodLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`), "")
+    .trim()
+}
+
 export function AISummaryPanel({ records }: AISummaryPanelProps) {
   const insights = useMemo(() => getActiveSummaryInsights(records), [records])
   const [summaries, setSummaries] = useState<Record<string, SummaryState>>({})
@@ -79,6 +85,10 @@ export function AISummaryPanel({ records }: AISummaryPanelProps) {
       <CardContent className="space-y-3">
         {insights.map((insight) => {
           const state = summaries[insight.id]
+          const summaryText = stripRepeatedPeriodLabel(
+            state?.summary ?? insight.fallbackSummary,
+            insight.periodLabel
+          )
           return (
             <div key={insight.id} className="rounded-lg border bg-white/80 p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -91,7 +101,7 @@ export function AISummaryPanel({ records }: AISummaryPanelProps) {
                 </Badge>
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {state?.loading ? "正在整理這段時間的配置與累積..." : state?.summary ?? insight.fallbackSummary}
+                {state?.loading ? "正在整理這段時間的配置與累積..." : summaryText}
               </p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {insight.highlights.slice(0, 3).map((highlight) => (

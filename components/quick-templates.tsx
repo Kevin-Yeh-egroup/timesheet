@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useTimeRecordStore } from "@/lib/store"
 import type { Category, Asset } from "@/lib/types"
-import { calculateHoursFromTimeRange, getDefaultTimeRange, minutesToTimeString, timeStringToMinutes } from "@/lib/types"
+import { ACTIVITY_PRESETS, calculateHoursFromTimeRange, getDefaultTimeRange, minutesToTimeString, timeStringToMinutes } from "@/lib/types"
 import { toast } from "sonner"
 
 interface QuickTemplate {
@@ -17,15 +17,10 @@ interface QuickTemplate {
   assets: Asset[]
 }
 
-const QUICK_TEMPLATES: QuickTemplate[] = [
-  { category: "學習", activity: "閱讀書籍", hours: 1, difficulty: 2, assets: ["軟實力"] },
-  { category: "學習", activity: "線上課程", hours: 1.5, difficulty: 3, assets: ["硬實力"] },
-  { category: "副業", activity: "寫作創作", hours: 1, difficulty: 4, assets: ["軟實力", "工具/副業基礎"] },
-  { category: "副業", activity: "經營社群", hours: 0.5, difficulty: 2, assets: ["工具/副業基礎"] },
-  { category: "人際", activity: "與朋友聚會", hours: 2, difficulty: 1, assets: ["軟實力"] },
-  { category: "鍛鍊", activity: "運動健身", hours: 1, difficulty: 3, assets: ["體力"] },
-  { category: "休息", activity: "充分休息", hours: 1, difficulty: 1, assets: ["體力"] },
-]
+const QUICK_TEMPLATES: QuickTemplate[] = ACTIVITY_PRESETS.slice(0, 10).map((preset) => ({
+  ...preset,
+  hours: ["上班", "睡眠/午休"].includes(preset.activity) ? 2 : 1,
+}))
 
 export function QuickTemplates({ initialDate }: { initialDate?: Date }) {
   const addRecord = useTimeRecordStore((state) => state.addRecord)
@@ -55,8 +50,11 @@ export function QuickTemplates({ initialDate }: { initialDate?: Date }) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Zap className="h-4 w-4" />
-          快速新增
+          快速新增常見生活片段
         </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          先用常見情境快速補上一筆，細節之後仍可編輯。
+        </p>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">

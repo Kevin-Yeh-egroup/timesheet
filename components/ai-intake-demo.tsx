@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import type { Category } from "@/lib/types"
-import { CATEGORIES, calculateHoursFromTimeRange, getDefaultTimeRange, minutesToTimeString, timeStringToMinutes } from "@/lib/types"
+import { CATEGORIES, CATEGORY_EMOJIS, calculateHoursFromTimeRange, getDefaultTimeRange, getPrimaryCategory, minutesToTimeString, timeStringToMinutes } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
 import { parseTimeRecordsWithAI, type AIParsedResult } from "@/lib/ai-intake"
 import { toast } from "sonner"
@@ -34,22 +34,23 @@ interface BrowserSpeechRecognition {
 }
 
 const DEMO_SAMPLES = [
-  "今天上班8小時、學習1小時、陪家人1小時、休息2小時",
-  "上班9小時\n學習30分\n運動1小時\n朋友聚會2小時",
-  "寫作副業2小時、讀書1小時、健身1小時",
+  "今天上班8小時、通勤聽英文30分、陪家人1小時、休息2小時",
+  "上班9小時\n打掃整理30分\n運動1小時\n朋友聚會2小時",
+  "寫作副業2小時、讀書1小時、陪長輩看診1小時",
 ]
 
 const CAT_COLORS: Record<Category, string> = {
+  做事: "bg-slate-100 text-slate-700 border-slate-200",
+  照顧: "bg-rose-100 text-rose-700 border-rose-200",
+  恢復: "bg-blue-100 text-blue-700 border-blue-200",
+  連結: "bg-amber-100 text-amber-700 border-amber-200",
+  探索: "bg-green-100 text-green-700 border-green-200",
   工作: "bg-slate-100 text-slate-700 border-slate-200",
   學習: "bg-green-100 text-green-700 border-green-200",
   副業: "bg-purple-100 text-purple-700 border-purple-200",
   人際: "bg-amber-100 text-amber-700 border-amber-200",
   休息: "bg-blue-100 text-blue-700 border-blue-200",
   鍛鍊: "bg-lime-100 text-lime-700 border-lime-200",
-}
-
-const CAT_EMOJI: Record<Category, string> = {
-  工作: "💼", 學習: "📚", 副業: "🌱", 人際: "💛", 休息: "🌿", 鍛鍊: "🏃",
 }
 
 // ── 單筆可編輯卡片 ──────────────────────────────
@@ -67,7 +68,7 @@ function EditableCard({ record, index, onChange, onRemove }: EditableCardProps) 
     <div className={`rounded-lg border ${CAT_COLORS[record.category].replace("text-", "border-").split(" ").slice(-1)[0]} bg-white`}>
       {/* 主列 */}
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <span className="text-lg leading-none">{CAT_EMOJI[record.category]}</span>
+        <span className="text-lg leading-none">{CATEGORY_EMOJIS[record.category]}</span>
 
         {/* 活動名稱 */}
         <Input
@@ -88,7 +89,7 @@ function EditableCard({ record, index, onChange, onRemove }: EditableCardProps) 
           <SelectContent>
             {CATEGORIES.map((c) => (
               <SelectItem key={c} value={c} className="text-xs">
-                {CAT_EMOJI[c]} {c}
+                {CATEGORY_EMOJIS[c]} {c}
               </SelectItem>
             ))}
           </SelectContent>
@@ -322,7 +323,7 @@ export function AIIntakeDemo({ onParsed }: { onParsed: (result: AIParsedResult) 
                 id="ai-text-input"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={"例如：上班8小時、學習1小時、陪家人1小時、休息2小時\n（用頓號或換行分隔可一次記錄多筆）"}
+                placeholder={"例如：上班8小時、通勤聽英文30分、陪家人1小時、休息2小時\n（用頓號或換行分隔可一次記錄多筆）"}
                 rows={3}
                 className="resize-none bg-white"
               />
@@ -396,13 +397,12 @@ export function AIIntakeDemo({ onParsed }: { onParsed: (result: AIParsedResult) 
                   <div
                     key={i}
                     className={{
-                      工作: "bg-slate-400",
-                      學習: "bg-green-400",
-                      副業: "bg-purple-400",
-                      人際: "bg-amber-400",
-                      休息: "bg-blue-400",
-                      鍛鍊: "bg-lime-400",
-                    }[r.category]}
+                      做事: "bg-slate-400",
+                      照顧: "bg-rose-400",
+                      恢復: "bg-blue-400",
+                      連結: "bg-amber-400",
+                      探索: "bg-green-400",
+                    }[getPrimaryCategory(r.category)]}
                     style={{ flex: r.hours }}
                     title={`${r.activity} ${r.hours}h`}
                   />

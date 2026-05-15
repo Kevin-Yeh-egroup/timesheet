@@ -19,13 +19,16 @@ import { Badge } from "@/components/ui/badge"
 import { useTimeRecordStore } from "@/lib/store"
 import {
   CATEGORIES,
-  ALL_ASSETS,
+  CATEGORY_EMOJIS,
   CONVERSION_STATUSES,
+  DISPLAY_ASSETS,
   TIME_OPTIONS,
   calculateHoursFromTimeRange,
   getDefaultTimeRange,
   getEndTimeOptions,
+  getPresetsByCategory,
   isValidTimeString,
+  suggestAssetsForRecord,
   timeStringToMinutes,
   type Category,
   type Asset,
@@ -40,15 +43,6 @@ const DIFFICULTY_LABELS: Record<number, { label: string; color: string }> = {
   3: { label: "中等", color: "text-blue-500" },
   4: { label: "較有挑戰", color: "text-orange-500" },
   5: { label: "較有挑戰", color: "text-orange-600" },
-}
-
-const CATEGORY_EMOJIS: Record<string, string> = {
-  "工作": "💼",
-  "學習": "📚",
-  "副業": "🌱",
-  "人際": "💛",
-  "休息": "🌿",
-  "鍛鍊": "🏃",
 }
 
 export function AddRecordForm({
@@ -69,7 +63,7 @@ export function AddRecordForm({
   const [date, setDate] = useState<Date>(initialDate ?? new Date())
   const initialTimeRange = getDefaultTimeRange()
   const [activity, setActivity] = useState("")
-  const [category, setCategory] = useState<Category>("學習")
+  const [category, setCategory] = useState<Category>("做事")
   const [hours, setHours] = useState("1")
   const [startTime, setStartTime] = useState(initialStartTime ?? initialTimeRange.startTime)
   const [endTime, setEndTime] = useState(initialEndTime ?? initialTimeRange.endTime)
@@ -125,6 +119,19 @@ export function AddRecordForm({
     setAssets((prev) =>
       prev.includes(asset) ? prev.filter((a) => a !== asset) : [...prev, asset]
     )
+  }
+
+  const categoryPresets = getPresetsByCategory(category)
+  const suggestedAssets = suggestAssetsForRecord(category, activity)
+
+  const applyPreset = (preset: { activity: string; difficulty: number; assets: Asset[] }) => {
+    setActivity(preset.activity)
+    setDifficulty(preset.difficulty)
+    setAssets(preset.assets)
+  }
+
+  const applySuggestedAssets = () => {
+    setAssets(suggestedAssets)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,7 +277,7 @@ export function AddRecordForm({
             <Label htmlFor="activity">活動內容</Label>
             <Input
               id="activity"
-              placeholder="例如：閱讀《原子習慣》30頁"
+              placeholder="例如：通勤聽英文 podcast、陪長輩看診、整理房間"
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
             />
@@ -279,7 +286,7 @@ export function AddRecordForm({
           {/* Category & Hours */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>分類</Label>
+              <Label>生活情境</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -303,6 +310,25 @@ export function AddRecordForm({
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
               />
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-sm">常見情境</Label>
+              <span className="text-xs text-muted-foreground">可點選帶入，也可略過</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categoryPresets.map((preset) => (
+                <Badge
+                  key={preset.activity}
+                  variant="outline"
+                  className="cursor-pointer transition-all hover:bg-accent active:scale-95"
+                  onClick={() => applyPreset(preset)}
+                >
+                  {preset.activity}
+                </Badge>
+              ))}
             </div>
           </div>
 
@@ -331,9 +357,21 @@ export function AddRecordForm({
 
           {/* Assets */}
           <div className="space-y-3">
-            <Label>這段時間累積了什麼？（可多選）</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>這段時間累積了什麼？（可多選）</Label>
+              {suggestedAssets.length > 0 && (
+                <Button type="button" variant="ghost" size="sm" onClick={applySuggestedAssets}>
+                  套用建議
+                </Button>
+              )}
+            </div>
+            {suggestedAssets.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                建議：{suggestedAssets.join("、")}
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
-              {ALL_ASSETS.map((asset) => (
+              {DISPLAY_ASSETS.map((asset) => (
                 <Badge
                   key={asset}
                   variant={assets.includes(asset) ? "default" : "outline"}
@@ -355,17 +393,17 @@ export function AddRecordForm({
               onCheckedChange={(checked) => setHasOutput(checked === true)}
             />
             <Label htmlFor="hasOutput" className="cursor-pointer">
-              這段時間有具體成果
+              這段時間有留下成果、感受或完成一件事
             </Label>
           </div>
 
           {/* Output Description */}
           {hasOutput && (
             <div className="space-y-2">
-              <Label htmlFor="outputDesc">成果說明（選填）</Label>
+              <Label htmlFor="outputDesc">成果或感受（選填）</Label>
               <Textarea
                 id="outputDesc"
-                placeholder="例如：完成一篇文章草稿"
+                placeholder="例如：完成一篇文章草稿、身體有恢復、想法更清楚"
                 value={outputDescription}
                 onChange={(e) => setOutputDescription(e.target.value)}
                 rows={2}

@@ -1,11 +1,32 @@
 import { getYesterday, toDateKey } from "@/lib/date-utils"
 
-export type Category = "工作" | "學習" | "副業" | "人際" | "休息" | "鍛鍊"
+export type PrimaryCategory = "做事" | "照顧" | "恢復" | "連結" | "探索"
+export type LegacyCategory = "工作" | "學習" | "副業" | "人際" | "休息" | "鍛鍊"
+export type Category = PrimaryCategory | LegacyCategory
 
 export type TimeValueType = "成長型" | "生產型" | "恢復型" | "關係型" | "彈性型"
 
-export type IntangibleAsset = "體力" | "軟實力" | "硬實力"
-export type TangibleAsset = "存款增加" | "收入" | "工具/副業基礎"
+export type LegacyIntangibleAsset = "體力" | "軟實力" | "硬實力"
+export type LegacyTangibleAsset = "存款增加" | "收入" | "工具/副業基礎"
+export type IntangibleAsset =
+  | LegacyIntangibleAsset
+  | "體力健康"
+  | "情緒穩定"
+  | "知識理解"
+  | "技能熟練"
+  | "職涯信用"
+  | "人際連結"
+  | "照顧能力"
+  | "生活掌控感"
+  | "創意靈感"
+  | "公共參與感"
+export type TangibleAsset =
+  | LegacyTangibleAsset
+  | "收入增加"
+  | "作品成果"
+  | "資格證明"
+  | "工具流程"
+  | "生活基礎"
 export type Asset = IntangibleAsset | TangibleAsset
 
 export type ConversionStatus = "尚未轉換" | "已開始嘗試" | "已有成果"
@@ -45,11 +66,95 @@ export interface Metrics {
   exerciseHours: number
 }
 
-export const CATEGORIES: Category[] = ["工作", "學習", "副業", "人際", "休息", "鍛鍊"]
+export const CATEGORIES: PrimaryCategory[] = ["做事", "照顧", "恢復", "連結", "探索"]
+export const LEGACY_CATEGORIES: LegacyCategory[] = ["工作", "學習", "副業", "人際", "休息", "鍛鍊"]
 
-export const INTANGIBLE_ASSETS: IntangibleAsset[] = ["體力", "軟實力", "硬實力"]
-export const TANGIBLE_ASSETS: TangibleAsset[] = ["存款增加", "收入", "工具/副業基礎"]
+export const LEGACY_INTANGIBLE_ASSETS: LegacyIntangibleAsset[] = ["體力", "軟實力", "硬實力"]
+export const LEGACY_TANGIBLE_ASSETS: LegacyTangibleAsset[] = ["存款增加", "收入", "工具/副業基礎"]
+export const INTANGIBLE_ASSETS: IntangibleAsset[] = [
+  "體力健康",
+  "情緒穩定",
+  "知識理解",
+  "技能熟練",
+  "職涯信用",
+  "人際連結",
+  "照顧能力",
+  "生活掌控感",
+  "創意靈感",
+  "公共參與感",
+  ...LEGACY_INTANGIBLE_ASSETS,
+]
+export const TANGIBLE_ASSETS: TangibleAsset[] = [
+  "收入增加",
+  "作品成果",
+  "資格證明",
+  "工具流程",
+  "生活基礎",
+  ...LEGACY_TANGIBLE_ASSETS,
+]
 export const ALL_ASSETS: Asset[] = [...INTANGIBLE_ASSETS, ...TANGIBLE_ASSETS]
+
+export const DISPLAY_ASSETS: Asset[] = [
+  "體力健康",
+  "情緒穩定",
+  "知識理解",
+  "技能熟練",
+  "職涯信用",
+  "人際連結",
+  "照顧能力",
+  "生活掌控感",
+  "收入增加",
+  "作品成果",
+  "工具流程",
+  "生活基礎",
+]
+
+export const CATEGORY_EMOJIS: Record<Category, string> = {
+  "做事": "✅",
+  "照顧": "🤲",
+  "恢復": "🌿",
+  "連結": "💛",
+  "探索": "✨",
+  "工作": "💼",
+  "學習": "📚",
+  "副業": "🌱",
+  "人際": "💛",
+  "休息": "🌿",
+  "鍛鍊": "🏃",
+}
+
+export const CATEGORY_LABELS: Record<PrimaryCategory, string> = {
+  "做事": "做事",
+  "照顧": "照顧",
+  "恢復": "恢復",
+  "連結": "連結",
+  "探索": "探索",
+}
+
+export interface ActivityPreset {
+  category: PrimaryCategory
+  activity: string
+  difficulty: number
+  assets: Asset[]
+}
+
+export const ACTIVITY_PRESETS: ActivityPreset[] = [
+  { category: "做事", activity: "上班", difficulty: 3, assets: ["職涯信用", "技能熟練"] },
+  { category: "做事", activity: "開會/處理專案", difficulty: 3, assets: ["職涯信用", "工具流程"] },
+  { category: "做事", activity: "通勤", difficulty: 2, assets: ["生活基礎"] },
+  { category: "照顧", activity: "煮飯/備餐", difficulty: 2, assets: ["照顧能力", "生活基礎"] },
+  { category: "照顧", activity: "打掃整理", difficulty: 2, assets: ["生活掌控感", "生活基礎"] },
+  { category: "照顧", activity: "陪小孩/長輩", difficulty: 3, assets: ["照顧能力", "人際連結"] },
+  { category: "恢復", activity: "睡眠/午休", difficulty: 1, assets: ["體力健康", "情緒穩定"] },
+  { category: "恢復", activity: "散步/運動", difficulty: 3, assets: ["體力健康"] },
+  { category: "恢復", activity: "看診/復健", difficulty: 2, assets: ["體力健康"] },
+  { category: "連結", activity: "陪家人", difficulty: 2, assets: ["人際連結"] },
+  { category: "連結", activity: "朋友聚會", difficulty: 1, assets: ["人際連結", "情緒穩定"] },
+  { category: "連結", activity: "社區/志工活動", difficulty: 3, assets: ["公共參與感", "人際連結"] },
+  { category: "探索", activity: "閱讀/聽課", difficulty: 2, assets: ["知識理解"] },
+  { category: "探索", activity: "創作/副業準備", difficulty: 4, assets: ["創意靈感", "作品成果"] },
+  { category: "探索", activity: "整理想法/規劃", difficulty: 2, assets: ["生活掌控感", "知識理解"] },
+]
 
 export const CONVERSION_STATUSES: ConversionStatus[] = [
   "尚未轉換",
@@ -117,17 +222,98 @@ export function getRecordTimeLabel(record: Pick<TimeRecord, "startTime" | "endTi
   return `${record.startTime}–${record.endTime}`
 }
 
-export function getTimeValueType(category: Category): TimeValueType {
+export function getPrimaryCategory(category: Category): PrimaryCategory {
   switch (category) {
+    case "工作":
+      return "做事"
     case "學習":
     case "副業":
-      return "成長型"
-    case "工作":
-      return "生產型"
+      return "探索"
+    case "人際":
+      return "連結"
     case "休息":
     case "鍛鍊":
+      return "恢復"
+    default:
+      return category
+  }
+}
+
+export function getCategoryLabel(category: Category): string {
+  const primary = getPrimaryCategory(category)
+  if (primary === category) return CATEGORY_LABELS[primary]
+  return `${CATEGORY_LABELS[primary]}（${category}）`
+}
+
+export function getPresetsByCategory(category: Category): ActivityPreset[] {
+  const primary = getPrimaryCategory(category)
+  return ACTIVITY_PRESETS.filter((preset) => preset.category === primary)
+}
+
+export function suggestAssetsForRecord(category: Category, activity: string): Asset[] {
+  const text = activity.toLowerCase()
+  const primary = getPrimaryCategory(category)
+  const suggested = new Set<Asset>()
+
+  ACTIVITY_PRESETS.forEach((preset) => {
+    if (text.includes(preset.activity.split("/")[0].toLowerCase())) {
+      preset.assets.forEach((asset) => suggested.add(asset))
+    }
+  })
+
+  if (["上班", "工作", "會議", "專案", "客戶", "報告", "提案"].some((word) => text.includes(word))) {
+    suggested.add("職涯信用")
+    suggested.add("技能熟練")
+  }
+  if (["讀書", "閱讀", "課程", "補習", "證照", "學習", "研究", "podcast"].some((word) => text.includes(word))) {
+    suggested.add("知識理解")
+  }
+  if (["副業", "創作", "寫作", "拍片", "社群", "接案", "作品"].some((word) => text.includes(word))) {
+    suggested.add("創意靈感")
+    suggested.add("作品成果")
+  }
+  if (["煮飯", "備餐", "打掃", "整理", "買菜", "家事"].some((word) => text.includes(word))) {
+    suggested.add("照顧能力")
+    suggested.add("生活基礎")
+  }
+  if (["陪", "小孩", "孩子", "長輩", "家人", "寵物", "陪診"].some((word) => text.includes(word))) {
+    suggested.add("照顧能力")
+    suggested.add("人際連結")
+  }
+  if (["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步", "睡", "休息", "看診", "復健"].some((word) => text.includes(word))) {
+    suggested.add("體力健康")
+  }
+  if (["朋友", "伴侶", "聚會", "聊天", "社區", "志工", "宗教"].some((word) => text.includes(word))) {
+    suggested.add("人際連結")
+  }
+  if (["辦", "繳費", "銀行", "文件", "維修", "通勤"].some((word) => text.includes(word))) {
+    suggested.add("生活掌控感")
+  }
+
+  if (suggested.size === 0) {
+    const defaults: Record<PrimaryCategory, Asset[]> = {
+      "做事": ["職涯信用"],
+      "照顧": ["照顧能力"],
+      "恢復": ["體力健康"],
+      "連結": ["人際連結"],
+      "探索": ["知識理解"],
+    }
+    defaults[primary].forEach((asset) => suggested.add(asset))
+  }
+
+  return Array.from(suggested).slice(0, 3)
+}
+
+export function getTimeValueType(category: Category): TimeValueType {
+  switch (getPrimaryCategory(category)) {
+    case "探索":
+      return "成長型"
+    case "做事":
+      return "生產型"
+    case "恢復":
       return "恢復型"
-    case "人際":
+    case "照顧":
+    case "連結":
       return "關係型"
     default:
       return "彈性型"
@@ -197,22 +383,22 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
     .reduce((sum, r) => sum + r.hours, 0)
   const highDifficultyRatio = totalHours > 0 ? (highDifficultyHours / totalHours) * 100 : 0
 
-  const productiveCategories: Category[] = ["工作", "學習", "副業", "人際"]
+  const productiveCategories: PrimaryCategory[] = ["做事", "探索", "連結"]
   const productiveHours = records
-    .filter((r) => productiveCategories.includes(r.category))
+    .filter((r) => productiveCategories.includes(getPrimaryCategory(r.category)))
     .reduce((sum, r) => sum + r.hours, 0)
   const productiveRatio = totalHours > 0 ? (productiveHours / totalHours) * 100 : 0
 
   const restHours = records
-    .filter((r) => r.category === "休息")
+    .filter((r) => getPrimaryCategory(r.category) === "恢復")
     .reduce((sum, r) => sum + r.hours, 0)
 
   const learningHours = records
-    .filter((r) => r.category === "學習")
+    .filter((r) => r.category === "學習" || getPrimaryCategory(r.category) === "探索")
     .reduce((sum, r) => sum + r.hours, 0)
 
   const relationshipHours = records
-    .filter((r) => r.category === "人際")
+    .filter((r) => getPrimaryCategory(r.category) === "連結" || getPrimaryCategory(r.category) === "照顧")
     .reduce((sum, r) => sum + r.hours, 0)
 
   // 鍛鍊類別 + 舊資料關鍵字相容
@@ -220,7 +406,7 @@ export function calculateMetrics(records: TimeRecord[]): Metrics {
   const exerciseHours = records
     .filter((r) =>
       r.category === "鍛鍊" ||
-      (r.category === "休息" && exerciseKeywords.some((k) => r.activity.includes(k)))
+      (getPrimaryCategory(r.category) === "恢復" && exerciseKeywords.some((k) => r.activity.includes(k)))
     )
     .reduce((sum, r) => sum + r.hours, 0)
 
@@ -328,20 +514,23 @@ export function getDailyFeedback(metrics: Metrics, records: TimeRecord[]): strin
 
   const feedbackOptions: string[] = []
 
-  const hasWork = records.some(r => r.category === "工作")
-  const hasRest = records.some(r => r.category === "休息")
-  const hasLearning = records.some(r => r.category === "學習")
-  const hasRelationship = records.some(r => r.category === "人際")
-  const hasExercise = records.some(r => r.category === "鍛鍊")
+  const hasWork = records.some(r => getPrimaryCategory(r.category) === "做事")
+  const hasRest = records.some(r => getPrimaryCategory(r.category) === "恢復")
+  const hasLearning = records.some(r => getPrimaryCategory(r.category) === "探索")
+  const hasRelationship = records.some(r => getPrimaryCategory(r.category) === "連結" || getPrimaryCategory(r.category) === "照顧")
+  const exerciseKeywords = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
+  const hasExercise = records.some(r =>
+    r.category === "鍛鍊" || exerciseKeywords.some((keyword) => r.activity.includes(keyword))
+  )
 
   if (hasWork && hasRest) {
-    feedbackOptions.push("今天的時間配置包含工作與休息，維持良好節奏。")
+    feedbackOptions.push("今天的時間配置包含做事與恢復，維持了生活節奏。")
   }
   if (hasLearning) {
-    feedbackOptions.push("今天有投入學習，正在累積未來的能力。")
+    feedbackOptions.push("今天有投入探索與學習，正在累積未來的能力。")
   }
   if (hasRelationship) {
-    feedbackOptions.push("今天照顧到了關係與人際，這也是很重要的投資。")
+    feedbackOptions.push("今天照顧到了關係或家庭支持，這也是很重要的累積。")
   }
   if (hasExercise) {
     feedbackOptions.push("今天有安排鍛鍊時間，體力正在穩定累積。")
@@ -363,10 +552,10 @@ export function getMonthTypology(metrics: Metrics): string {
   if (metrics.totalHours === 0) return "本月尚無紀錄，隨時可以開始。"
 
   if (metrics.productiveRatio < 40) {
-    return "目前時間配置以休息與恢復為主，維持了生活節奏。"
+    return "目前時間配置以照顧生活與恢復為主，維持了生活節奏。"
   }
   if (metrics.learningHours / metrics.totalHours > 0.3) {
-    return "本月有大量時間投入學習，正在快速累積新能力。"
+    return "本月有許多時間投入探索與學習，正在快速累積新能力。"
   }
   if (metrics.conversionRate > 50) {
     return "本月有豐富的成果轉換，開始出現新的機會與嘗試。"
@@ -381,10 +570,10 @@ export function getMonthSuggestions(metrics: Metrics): string[] {
   const suggestions: string[] = []
 
   if (metrics.learningHours < 8) {
-    suggestions.push("可以嘗試增加一些學習或探索的時間，哪怕每天只有 30 分鐘。")
+    suggestions.push("可以嘗試增加一些學習、閱讀或整理想法的時間，哪怕每天只有 30 分鐘。")
   }
   if (metrics.relationshipHours < 5) {
-    suggestions.push("可以為家人或朋友預留一些陪伴時間，關係也是重要的資產。")
+    suggestions.push("可以為家人、朋友或社區連結預留一些陪伴時間，關係也是重要的資產。")
   }
   if (metrics.conversionRate < 30) {
     suggestions.push("目前已有累積，可以逐步嘗試將學習或工作轉化為具體成果。")
@@ -503,38 +692,59 @@ const CAPABILITY_DEFS: Array<{
 export function calculateCapabilities(records: TimeRecord[]): CapabilityScore[] {
   // 舊資料相容：休息類別中含運動關鍵字也計入體力
   const exerciseKeywords = ["運動", "健身", "跑步", "重訓", "瑜珈", "走路", "散步"]
+  const learningKeywords = ["學習", "閱讀", "讀書", "課程", "補習", "研究", "證照", "聽課"]
+  const sideKeywords = ["副業", "創作", "寫作", "拍片", "社群", "接案", "作品"]
+  const relationshipKeywords = ["朋友", "家人", "伴侶", "聊天", "聚會", "陪", "社區", "志工"]
 
-  const workRecs = records.filter(r => r.category === "工作")
+  const workRecs = records.filter(r =>
+    r.category === "工作" ||
+    (getPrimaryCategory(r.category) === "做事" && !["通勤", "繳費", "買菜"].some(k => r.activity.includes(k)))
+  )
   const workHours = workRecs.reduce((s, r) => s + r.hours, 0)
   const workDiffScore = workRecs.reduce((s, r) => s + r.hours * r.difficulty, 0)
   const workWithOutput = workRecs.filter(r => r.hasOutput).length
 
-  const learnRecs = records.filter(r => r.category === "學習")
+  const learnRecs = records.filter(r =>
+    r.category === "學習" ||
+    (getPrimaryCategory(r.category) === "探索" && learningKeywords.some(k => r.activity.includes(k)))
+  )
   const learningHours = learnRecs.reduce((s, r) => s + r.hours, 0)
   const learningDiffScore = learnRecs.reduce((s, r) => s + r.hours * r.difficulty, 0)
 
-  const sideDiffScore = records.filter(r => r.category === "副業").reduce((s, r) => s + r.hours * r.difficulty, 0)
-  const restHours = records.filter(r => r.category === "休息").reduce((s, r) => s + r.hours, 0)
+  const sideDiffScore = records
+    .filter(r => r.category === "副業" || sideKeywords.some(k => r.activity.includes(k)))
+    .reduce((s, r) => s + r.hours * r.difficulty, 0)
+  const restHours = records
+    .filter(r => getPrimaryCategory(r.category) === "恢復")
+    .reduce((s, r) => s + r.hours, 0)
 
   // 鍛鍊類別直接計入；舊資料以關鍵字從休息中抓
   const exerciseHours = records
     .filter(r =>
       r.category === "鍛鍊" ||
-      (r.category === "休息" && exerciseKeywords.some(k => r.activity.includes(k)))
+      (getPrimaryCategory(r.category) === "恢復" && exerciseKeywords.some(k => r.activity.includes(k)))
     )
     .reduce((s, r) => s + r.hours, 0)
 
-  const relRecs = records.filter(r => r.category === "人際")
+  const relRecs = records.filter(r =>
+    r.category === "人際" ||
+    getPrimaryCategory(r.category) === "連結" ||
+    (getPrimaryCategory(r.category) === "照顧" && relationshipKeywords.some(k => r.activity.includes(k)))
+  )
   const relHours = relRecs.reduce((s, r) => s + r.hours, 0)
   const relWithOutput = relRecs.filter(r => r.hasOutput).length
 
-  const softSkillCount = records.filter(r => r.assets.includes("軟實力")).length
-  const hardSkillCount = records.filter(r => r.assets.includes("硬實力")).length
+  const softSkillCount = records.filter(r =>
+    r.assets.some(asset => ["軟實力", "人際連結", "情緒穩定", "照顧能力", "職涯信用"].includes(asset))
+  ).length
+  const hardSkillCount = records.filter(r =>
+    r.assets.some(asset => ["硬實力", "技能熟練", "知識理解", "工具流程", "作品成果"].includes(asset))
+  ).length
 
   const dateCategories: Record<string, Set<string>> = {}
   records.forEach(r => {
     if (!dateCategories[r.date]) dateCategories[r.date] = new Set()
-    dateCategories[r.date].add(r.category)
+    dateCategories[r.date].add(getPrimaryCategory(r.category))
   })
   const dayCount = Object.keys(dateCategories).length
   const avgCategoriesPerDay = dayCount > 0
@@ -603,13 +813,13 @@ export function getYesterdayInsights(records: TimeRecord[]): YesterdayInsights {
     completionRate: Math.min((trackedHours / 24) * 100, 100),
     categoryBreakdown: CATEGORIES.map(cat => ({
       category: cat,
-      hours: recs.filter(r => r.category === cat).reduce((s, r) => s + r.hours, 0),
+      hours: recs.filter(r => getPrimaryCategory(r.category) === cat).reduce((s, r) => s + r.hours, 0),
     })).filter(x => x.hours > 0),
-    hasWork: recs.some(r => r.category === "工作"),
-    hasRest: recs.some(r => r.category === "休息"),
-    hasLearning: recs.some(r => r.category === "學習"),
-    hasRelationship: recs.some(r => r.category === "人際"),
-    hasExercise: recs.some(r => r.category === "鍛鍊"),
+    hasWork: recs.some(r => getPrimaryCategory(r.category) === "做事"),
+    hasRest: recs.some(r => getPrimaryCategory(r.category) === "恢復"),
+    hasLearning: recs.some(r => getPrimaryCategory(r.category) === "探索"),
+    hasRelationship: recs.some(r => getPrimaryCategory(r.category) === "連結" || getPrimaryCategory(r.category) === "照顧"),
+    hasExercise: recs.some(r => r.category === "鍛鍊" || ["運動", "健身", "跑步", "走路", "散步"].some(k => r.activity.includes(k))),
     outputCount: recs.filter(r => r.hasOutput).length,
   }
 }
@@ -638,7 +848,7 @@ export function getWeeklyInsights(records: TimeRecord[]): WeeklyInsights {
     mostActiveDayHours,
     categoryBreakdown: CATEGORIES.map(cat => ({
       category: cat,
-      hours: weekRecs.filter(r => r.category === cat).reduce((s, r) => s + r.hours, 0),
+      hours: weekRecs.filter(r => getPrimaryCategory(r.category) === cat).reduce((s, r) => s + r.hours, 0),
     })).filter(x => x.hours > 0).sort((a, b) => b.hours - a.hours),
     weekRecordCount: weekRecs.length,
     outputCount: weekRecs.filter(r => r.hasOutput).length,

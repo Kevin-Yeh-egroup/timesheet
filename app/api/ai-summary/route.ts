@@ -37,6 +37,7 @@ export async function POST(request: Request) {
                     "避免使用：評分、扣分、太少、不夠、浪費、機會成本、低效。",
                     "請使用：累積、配置、觀察、可以嘗試、逐步、持續。",
                     "摘要以 2 到 3 句為主，不要列點，不要誇張承諾。",
+                    "畫面已另外顯示期間，摘要正文不要再以日期或期間開頭。",
                     `摘要類型：${insight.title}`,
                     `期間：${insight.periodLabel}`,
                     `統計：${JSON.stringify(insight.stats)}`,

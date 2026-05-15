@@ -12,6 +12,7 @@ import { getTimeReminders } from "@/lib/insights"
 interface TimeReminderCardProps {
   records: TimeRecord[]
   onAddRecord: (date: Date) => void
+  isSocialWorker?: boolean
 }
 
 function getNotificationPermission(): NotificationPermission | "unsupported" {
@@ -19,7 +20,7 @@ function getNotificationPermission(): NotificationPermission | "unsupported" {
   return Notification.permission
 }
 
-export function TimeReminderCard({ records, onAddRecord }: TimeReminderCardProps) {
+export function TimeReminderCard({ records, onAddRecord, isSocialWorker = false }: TimeReminderCardProps) {
   const reminders = useMemo(() => getTimeReminders(records), [records])
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("unsupported")
 
@@ -59,7 +60,9 @@ export function TimeReminderCard({ records, onAddRecord }: TimeReminderCardProps
             <div>
               <p className="text-sm font-semibold text-amber-900">時間記錄提醒</p>
               <p className="text-xs text-amber-800/80">
-                像記帳一樣，固定補上一點時間，會更容易看見累積。
+                {isSocialWorker
+                  ? "可陪同服務對象補上仍記得的時間片段，讓個案歷程更完整。"
+                  : "像記帳一樣，固定補上一點時間，會更容易看見累積。"}
               </p>
             </div>
           </div>

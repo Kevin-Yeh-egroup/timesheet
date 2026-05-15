@@ -66,16 +66,15 @@ export default function TimePage() {
           </div>
         </header>
 
-        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-4">
-            <DailyCompletion trackedHours={trackedHours} label="這天" />
-            <DayTimeBlocks
-              records={records}
-              selectedDate={selectedDate}
-              onAddTimeSlot={openAddRecord}
-            />
-          </div>
-          <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <DailyCompletion trackedHours={trackedHours} label="這天" />
+
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <DayTimeBlocks
+            records={records}
+            selectedDate={selectedDate}
+            onAddTimeSlot={openAddRecord}
+          />
+          <div className="space-y-4 lg:sticky lg:top-16 lg:self-start">
             <RecordsCalendar
               records={records}
               selectedDate={selectedDate}

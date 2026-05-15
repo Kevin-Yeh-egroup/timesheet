@@ -3,14 +3,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts"
 import type { TimeRecord, Category } from "@/lib/types"
-import { CATEGORIES } from "@/lib/types"
+import { CATEGORIES, getPrimaryCategory } from "@/lib/types"
 
 interface CategoryChartProps {
   records: TimeRecord[]
 }
 
-// 藍=穩定(工作)、綠=成果(學習)、橘=挑戰(副業)、金=關係(人際)、灰藍=恢復(休息)、萊姆=鍛鍊
 const COLORS: Record<Category, string> = {
+  "做事": "#3b82f6",
+  "照顧": "#fb7185",
+  "恢復": "#94a3b8",
+  "連結": "#f59e0b",
+  "探索": "#10b981",
   "工作": "#3b82f6",
   "學習": "#10b981",
   "副業": "#f97316",
@@ -20,6 +24,11 @@ const COLORS: Record<Category, string> = {
 }
 
 const CUSTOM_LABELS: Record<Category, string> = {
+  "做事": "做事（工作/辦事）",
+  "照顧": "照顧（家務/陪伴）",
+  "恢復": "恢復（休息/健康）",
+  "連結": "連結（關係/社區）",
+  "探索": "探索（學習/創作）",
   "工作": "工作（生產型）",
   "學習": "學習（成長型）",
   "副業": "副業（成長型）",
@@ -31,7 +40,7 @@ const CUSTOM_LABELS: Record<Category, string> = {
 export function CategoryChart({ records }: CategoryChartProps) {
   const data = CATEGORIES.map((category) => {
     const hours = records
-      .filter((r) => r.category === category)
+      .filter((r) => getPrimaryCategory(r.category) === category)
       .reduce((sum, r) => sum + r.hours, 0)
     return {
       name: category,

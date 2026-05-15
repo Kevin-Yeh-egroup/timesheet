@@ -2,34 +2,26 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
-import { BarChart3, BookOpen, Clock, ListChecks, MessageCircle, Plus, Sparkles } from "lucide-react"
+import { BookOpen, Sparkles } from "lucide-react"
 import { AppShell } from "@/components/app-shell"
 import { MetricsCards } from "@/components/metrics-cards"
 import { RecordsList } from "@/components/records-list"
-import { DemoPresetCard } from "@/components/demo-preset-card"
 import { DailyCompletion } from "@/components/daily-completion"
 import { TimeReminderCard } from "@/components/time-reminder-card"
-import { AISummaryPanel } from "@/components/ai-summary-panel"
 import { RecordEntrySheet } from "@/components/record-entry-sheet"
 import { Button } from "@/components/ui/button"
 import { useTimeRecordStore } from "@/lib/store"
 import { calculateMetrics, calculateTrackedHoursByDate } from "@/lib/types"
-
-const featureLinks = [
-  { href: "/guide", title: "使用說明", description: "了解時間如何逐步累積成資產", icon: BookOpen },
-  { href: "/time", title: "時段盤點", description: "看見 24 小時哪些時段已被記錄", icon: Clock },
-  { href: "/ai", title: "AI 整理", description: "用語音或文字快速整理時間", icon: Sparkles },
-  { href: "/insights", title: "摘要與提醒", description: "回顧昨日、週期摘要與提醒", icon: MessageCircle },
-  { href: "/records", title: "時間紀錄", description: "篩選、編輯與管理紀錄", icon: ListChecks },
-  { href: "/report", title: "月報表", description: "查看圖表、明細與匯出", icon: BarChart3 },
-]
+import { getPlatformContextFromSearchParams } from "@/lib/platform-context"
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [reminderSheetOpen, setReminderSheetOpen] = useState(false)
+  const [reminderDate, setReminderDate] = useState<Date>(new Date())
   const records = useTimeRecordStore((state) => state.records)
   const getMonthRecords = useTimeRecordStore((state) => state.getMonthRecords)
 
@@ -48,88 +40,85 @@ export default function DashboardPage() {
   }
 
   const now = new Date()
+  const platformContext = getPlatformContextFromSearchParams(searchParams)
+  const isSocialWorker = platformContext.audienceMode === "social-worker"
+  const caseName = searchParams?.get("caseName")
+  const queryString = searchParams?.toString()
+  const withCurrentParams = (href: string) => `${href}${queryString ? `?${queryString}` : ""}`
   const monthRecords = getMonthRecords(now.getFullYear(), now.getMonth())
   const metrics = calculateMetrics(monthRecords)
   const todayTrackedHours = calculateTrackedHoursByDate(records, now)
 
   const openAddRecordForDate = (date: Date) => {
-    setSelectedDate(date)
-    setSheetOpen(true)
-  }
-
-  const openAddRecordToday = () => {
-    openAddRecordForDate(new Date())
+    setReminderDate(date)
+    setReminderSheetOpen(true)
   }
 
   return (
     <AppShell>
       <div className="space-y-6">
 
-        {/* ── 標題列 ─────────────────────── */}
-        <header className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">時間資產總覽</h1>
-            <p className="text-sm text-muted-foreground">
-              {format(now, "yyyy年M月", { locale: zhTW })} · 共 {monthRecords.length} 筆紀錄 · 看見你的累積
-            </p>
-          </div>
-          <div className="hidden shrink-0 gap-2 md:flex">
-            <Button asChild variant="outline">
-              <Link href="/guide">
-                <BookOpen className="h-4 w-4" />
-                使用說明
-              </Link>
-            </Button>
-            <Button className="gap-2" onClick={openAddRecordToday}>
-              <Plus className="h-4 w-4" />
-              新增紀錄
-            </Button>
-          </div>
-        </header>
-
-        <DemoPresetCard />
-
-        <TimeReminderCard records={records} onAddRecord={openAddRecordForDate} />
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <DailyCompletion trackedHours={todayTrackedHours} label="今日" />
-          <AISummaryPanel records={records} />
-        </div>
-
-        <MetricsCards metrics={metrics} todayTrackedHours={todayTrackedHours} />
-
-        <section className="grid gap-3 md:grid-cols-2">
-          {featureLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="group rounded-xl border bg-card p-4 transition-all hover:border-primary/30 hover:bg-accent/40 hover:shadow-sm active:scale-[0.99]"
-            >
-              <div className="flex items-start gap-3">
-                <div className="rounded-lg bg-blue-50 p-2 text-blue-600 transition-transform group-hover:scale-105">
-                  <item.icon className="h-4 w-4" />
+        <div className="space-y-4">
+          {/* ── 標題列 ─────────────────────── */}
+          <header className="rounded-3xl border border-emerald-100 bg-white/90 p-5 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                    {isSocialWorker ? "社工版" : "一般民眾版"}
+                  </span>
+                  {isSocialWorker && caseName && (
+                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                      個案：{caseName}
+                    </span>
+                  )}
                 </div>
-                <div>
-                  <p className="font-medium">{item.title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">
+                  {isSocialWorker ? "個案時間資源盤點總覽" : "時間資源盤點總覽"}
+                </h1>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  {format(now, "yyyy年M月", { locale: zhTW })} · 共 {monthRecords.length} 筆紀錄 ·
+                  {isSocialWorker
+                    ? " 協助服務對象看見時間安排、休息與能力累積"
+                    : " 看見你的時間安排、能力提升與休息恢復"}
+                </p>
+                <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-emerald-700">
+                  <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {isSocialWorker
+                    ? "協助個案填寫前，可先看操作說明；工具會示範如何陪同服務對象補齊一天安排，不會新增或污染個案正式紀錄。"
+                    : "第一次使用可先看操作說明；說明頁只提供流程與畫面示意，不會新增或污染正式紀錄。"}
+                </p>
               </div>
-            </Link>
-          ))}
-        </section>
+              <div className="hidden shrink-0 gap-2 md:flex">
+                <Button asChild variant="outline">
+                  <Link href={withCurrentParams("/guide")}>
+                    <BookOpen className="h-4 w-4" />
+                    使用說明
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          <div className="space-y-4">
+            <TimeReminderCard
+              records={records}
+              onAddRecord={openAddRecordForDate}
+              isSocialWorker={isSocialWorker}
+            />
+
+            <DailyCompletion trackedHours={todayTrackedHours} label="今日" />
+            <MetricsCards metrics={metrics} todayTrackedHours={todayTrackedHours} />
+          </div>
+        </div>
 
         <RecordsList records={records} enableCategoryFilter />
       </div>
-
-      {/* ── 浮動新增按鈕（手機版） ──────── */}
-      <button
-        className="fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 active:scale-95 md:hidden"
-        aria-label="新增紀錄"
-        onClick={openAddRecordToday}
-      >
-        <Plus className="h-6 w-6" />
-      </button>
-      <RecordEntrySheet open={sheetOpen} onOpenChange={setSheetOpen} selectedDate={selectedDate} />
+      <RecordEntrySheet
+        open={reminderSheetOpen}
+        onOpenChange={setReminderSheetOpen}
+        selectedDate={reminderDate}
+      />
     </AppShell>
   )
 }

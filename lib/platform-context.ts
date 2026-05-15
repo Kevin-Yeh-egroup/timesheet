@@ -5,6 +5,7 @@ export type PlatformContext = {
   authStatus: AuthStatus
   audienceMode: AudienceMode
   currentCaseId?: string
+  caseName?: string
   guidePath: string
   publicToolPath: string
   toolEntryPath: string
@@ -50,6 +51,32 @@ export function getPlatformContext(overrides: Partial<PlatformContext> = {}): Pl
   }
 }
 
+type SearchParamsLike = {
+  get: (name: string) => string | null
+}
+
+export function getPlatformContextFromSearchParams(
+  searchParams: SearchParamsLike | null | undefined,
+  overrides: Partial<PlatformContext> = {}
+): PlatformContext {
+  const baseContext = getPlatformContext(overrides)
+  const authStatus = searchParams?.get("authStatus") ?? undefined
+  const audienceMode = searchParams?.get("audienceMode") ?? undefined
+  const currentCaseId =
+    searchParams?.get("familyfinhealthCaseId") ??
+    searchParams?.get("caseId") ??
+    undefined
+  const caseName = searchParams?.get("caseName") ?? undefined
+
+  return {
+    ...baseContext,
+    authStatus: isAuthStatus(authStatus) ? authStatus : baseContext.authStatus,
+    audienceMode: isAudienceMode(audienceMode) ? audienceMode : baseContext.audienceMode,
+    currentCaseId,
+    caseName,
+  }
+}
+
 export function resolveToolEntryPath(
   context: PlatformContext,
   options: { guideCompleted?: boolean } = {}
@@ -59,9 +86,16 @@ export function resolveToolEntryPath(
   }
 
   if (context.audienceMode === "social-worker") {
-    return context.currentCaseId
-      ? `${context.caseToolBasePath}/${context.currentCaseId}/time-assets`
-      : context.caseListPath
+    if (!context.currentCaseId) return context.caseListPath
+
+    const params = new URLSearchParams({
+      audienceMode: "social-worker",
+      authStatus: context.authStatus,
+      familyfinhealthCaseId: context.currentCaseId,
+    })
+    if (context.caseName) params.set("caseName", context.caseName)
+
+    return `${context.publicToolPath}?${params.toString()}`
   }
 
   return context.publicToolPath

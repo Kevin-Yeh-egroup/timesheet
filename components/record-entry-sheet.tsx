@@ -48,10 +48,10 @@ export function RecordEntrySheet({
         <SheetHeader className="sticky top-0 z-10 border-b bg-background px-6 py-4">
           <SheetTitle className="flex items-center gap-2">
             <PenLine className="h-4 w-4 text-blue-500" />
-            記錄時間
+            新增一筆
           </SheetTitle>
           <p className="text-xs text-muted-foreground">
-            用一句話快速輸入，或手動填寫詳細紀錄
+            可用 AI 文字或語音快速整理，也可以手動填寫詳細紀錄
           </p>
         </SheetHeader>
         <div className="space-y-5 px-6 py-5">

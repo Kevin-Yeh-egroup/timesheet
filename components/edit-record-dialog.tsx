@@ -19,15 +19,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useTimeRecordStore } from "@/lib/store"
 import { parseDateKey } from "@/lib/date-utils"
 import {
-  ALL_ASSETS,
+  CATEGORY_EMOJIS,
   CATEGORIES,
   CONVERSION_STATUSES,
+  DISPLAY_ASSETS,
   TIME_OPTIONS,
   calculateHoursFromTimeRange,
   getDefaultTimeRange,
   getDifficultyLabel,
   getEndTimeOptions,
+  getPresetsByCategory,
   isValidTimeString,
+  suggestAssetsForRecord,
   timeStringToMinutes,
   type Asset,
   type Category,
@@ -71,6 +74,10 @@ export function EditRecordDialog({ record, trigger }: { record: TimeRecord; trig
   const toggleAsset = (asset: Asset) => {
     setAssets((prev) => (prev.includes(asset) ? prev.filter((a) => a !== asset) : [...prev, asset]))
   }
+
+  const categoryPresets = getPresetsByCategory(category)
+  const suggestedAssets = suggestAssetsForRecord(category, activity)
+  const visibleAssets = Array.from(new Set([...DISPLAY_ASSETS, ...assets]))
 
   useEffect(() => {
     const calculatedHours = calculateHoursFromTimeRange(startTime, endTime)
@@ -195,7 +202,7 @@ export function EditRecordDialog({ record, trigger }: { record: TimeRecord; trig
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>類別</Label>
+              <Label>生活情境</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -203,7 +210,7 @@ export function EditRecordDialog({ record, trigger }: { record: TimeRecord; trig
                 <SelectContent>
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat}
+                      {CATEGORY_EMOJIS[cat]} {cat}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -221,14 +228,43 @@ export function EditRecordDialog({ record, trigger }: { record: TimeRecord; trig
               />
             </div>
           </div>
+          <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-sm">常見情境</Label>
+              <span className="text-xs text-muted-foreground">可點選帶入，也可略過</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categoryPresets.map((preset) => (
+                <Badge
+                  key={preset.activity}
+                  variant="outline"
+                  className="cursor-pointer transition-all hover:bg-accent active:scale-95"
+                  onClick={() => {
+                    setActivity(preset.activity)
+                    setDifficulty(preset.difficulty)
+                    setAssets(preset.assets)
+                  }}
+                >
+                  {preset.activity}
+                </Badge>
+              ))}
+            </div>
+          </div>
           <div className="space-y-2">
             <Label>難度 / 消耗程度：{difficulty} - {getDifficultyLabel(difficulty)}</Label>
             <Slider value={[difficulty]} onValueChange={([v]) => setDifficulty(v)} min={1} max={5} step={1} />
           </div>
           <div className="space-y-2">
-            <Label>累積資產 (可多選)</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>累積資產 (可多選)</Label>
+              {suggestedAssets.length > 0 && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setAssets(suggestedAssets)}>
+                  套用建議
+                </Button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
-              {ALL_ASSETS.map((asset) => (
+              {visibleAssets.map((asset) => (
                 <Badge
                   key={asset}
                   variant={assets.includes(asset) ? "default" : "outline"}
@@ -247,11 +283,11 @@ export function EditRecordDialog({ record, trigger }: { record: TimeRecord; trig
               checked={hasOutput}
               onCheckedChange={(checked) => setHasOutput(checked === true)}
             />
-            <Label htmlFor={`has-output-${record.id}`}>這段時間有具體產出</Label>
+            <Label htmlFor={`has-output-${record.id}`}>這段時間有留下成果、感受或完成一件事</Label>
           </div>
           {hasOutput && (
             <div className="space-y-2">
-              <Label htmlFor={`output-${record.id}`}>產出說明</Label>
+              <Label htmlFor={`output-${record.id}`}>成果或感受</Label>
               <Textarea
                 id={`output-${record.id}`}
                 value={outputDescription}

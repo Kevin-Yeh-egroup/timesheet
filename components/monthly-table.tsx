@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { TimeRecord } from "@/lib/types"
-import { CATEGORIES, getDifficultyLabel, getDifficultyColor } from "@/lib/types"
+import { CATEGORIES, CATEGORY_EMOJIS, getDifficultyLabel, getDifficultyColor, getPrimaryCategory } from "@/lib/types"
 import { useTimeRecordStore } from "@/lib/store"
 import { EditRecordDialog } from "@/components/edit-record-dialog"
 import { toast } from "sonner"
@@ -59,7 +59,7 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
         return sortOrder === "asc" ? dateDiff : -dateDiff
       }
       const categoryCompare =
-        (categoryOrder.get(a.category) ?? 0) - (categoryOrder.get(b.category) ?? 0)
+        (categoryOrder.get(getPrimaryCategory(a.category)) ?? 0) - (categoryOrder.get(getPrimaryCategory(b.category)) ?? 0)
       return sortOrder === "asc" ? categoryCompare : -categoryCompare
     })
   }, [records, sortBy, sortOrder])
@@ -145,7 +145,7 @@ export function MonthlyTable({ records }: MonthlyTableProps) {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
-                      {record.category}
+                      {CATEGORY_EMOJIS[record.category]} {getPrimaryCategory(record.category)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right text-sm">

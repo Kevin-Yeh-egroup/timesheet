@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
 import type { Category, TimeRecord } from "@/lib/types"
-import { CATEGORIES, calculateMetrics } from "@/lib/types"
+import { CATEGORIES, calculateMetrics, getPrimaryCategory } from "@/lib/types"
 import {
   getCurrentMonthRange,
   getDateRange,
@@ -67,7 +67,7 @@ function categoryBreakdown(records: TimeRecord[]): Array<{ category: Category; h
     .map((category) => ({
       category,
       hours: records
-        .filter((record) => record.category === category)
+        .filter((record) => getPrimaryCategory(record.category) === category)
         .reduce((sum, record) => sum + record.hours, 0),
     }))
     .filter((item) => item.hours > 0)
@@ -76,7 +76,7 @@ function categoryBreakdown(records: TimeRecord[]): Array<{ category: Category; h
 
 function buildFallbackSummary(period: SummaryPeriod, records: TimeRecord[], periodLabel: string): string {
   if (records.length === 0) {
-    return `${periodLabel}尚未留下紀錄，可以從一兩件記得的事情開始補充。`
+    return "尚未留下紀錄，可以從一兩件記得的事情開始補充。"
   }
 
   const metrics = calculateMetrics(records)
@@ -86,10 +86,10 @@ function buildFallbackSummary(period: SummaryPeriod, records: TimeRecord[], peri
     : ""
 
   if (period === "day") {
-    return `${periodLabel}已記錄 ${metrics.totalHours.toFixed(1)} 小時，主要累積在${top?.category ?? "多個面向"}${outputText}。`
+    return `已記錄 ${metrics.totalHours.toFixed(1)} 小時，主要累積在${top?.category ?? "多個面向"}${outputText}。`
   }
 
-  return `${periodLabel}共記錄 ${metrics.totalHours.toFixed(1)} 小時，主要配置在${top?.category ?? "多個面向"}${outputText}，這些紀錄正在幫助你看見累積。`
+  return `共記錄 ${metrics.totalHours.toFixed(1)} 小時，主要配置在${top?.category ?? "多個面向"}${outputText}，這些紀錄正在幫助你看見累積。`
 }
 
 function buildSuggestions(records: TimeRecord[], totalDays: number): string[] {
@@ -100,8 +100,8 @@ function buildSuggestions(records: TimeRecord[], totalDays: number): string[] {
   const averageHours = metrics.totalHours / Math.max(totalDays, 1)
 
   if (averageHours < 4) suggestions.push("可以從每天幾個固定時段開始記錄，逐步看見時間配置。")
-  if (metrics.restHours === 0) suggestions.push("也可以補充休息或恢復時間，讓一天的配置更完整。")
-  if (metrics.learningHours === 0) suggestions.push("若有閱讀、研究或練習，也可以記成學習累積。")
+  if (metrics.restHours === 0) suggestions.push("也可以補充休息、運動或看診等恢復時間，讓一天的配置更完整。")
+  if (metrics.learningHours === 0) suggestions.push("若有閱讀、研究、通勤聽課或整理想法，也可以記成探索累積。")
   if (metrics.outputRecordCount === 0) suggestions.push("已有投入時，可以觀察哪些活動開始形成具體成果。")
 
   return suggestions.length > 0 ? suggestions.slice(0, 3) : ["目前紀錄節奏穩定，可以持續用同樣方式累積。"]
