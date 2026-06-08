@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "總覽", icon: LayoutDashboard },
-  { href: "/insights", label: "摘要", icon: MessageCircle },
-  { href: "/time", label: "時段", icon: Clock },
+  { href: "/insights", label: "回顧", icon: MessageCircle },
+  { href: "/time", label: "時間表", icon: Clock },
   { href: "/records", label: "紀錄", icon: ListChecks },
   { href: "/report", label: "報表", icon: BarChart3 },
 ]
@@ -21,9 +21,9 @@ export function Navigation() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-emerald-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex max-w-6xl items-center gap-2 overflow-x-auto px-3 py-2">
+      <div className="mx-auto flex max-w-6xl items-center gap-2 overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="hidden shrink-0 rounded-full bg-[linear-gradient(135deg,#00695c_0%,#00897b_100%)] px-4 py-2 text-white shadow-sm md:block">
-          <p className="text-xs font-bold leading-none">時間資源盤點助理</p>
+          <p className="text-xs font-bold leading-none">時間掌握小幫手</p>
         </div>
         {navItems.map((item) => {
           const isActive = pathname === item.href

@@ -10,8 +10,8 @@ const notoSansTC = Noto_Sans_TC({
 })
 
 export const metadata: Metadata = {
-  title: '時間盤點表 | Time Asset Tracker',
-  description: '記錄你的時間投入，盤點你的資產累積',
+  title: '時間掌握小幫手',
+  description: '先記一段時間，看見自己的生活節奏與時間亮點',
   generator: 'v0.app',
   icons: {
     icon: [

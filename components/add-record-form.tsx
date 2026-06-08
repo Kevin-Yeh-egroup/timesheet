@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
-import { CalendarIcon, Check, Sparkles } from "lucide-react"
+import { CalendarIcon, Check, ChevronDown, ChevronUp, Sparkles, SlidersHorizontal } from "lucide-react"
 import { zhTW } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useTimeRecordStore } from "@/lib/store"
 import {
   CATEGORIES,
@@ -74,6 +75,7 @@ export function AddRecordForm({
   const [conversionStatus, setConversionStatus] = useState<ConversionStatus>("尚未轉換")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   useEffect(() => {
     if (initialDate) setDate(initialDate)
@@ -186,9 +188,9 @@ export function AddRecordForm({
   return (
     <Card className="border-border/50">
       <CardHeader>
-        <CardTitle className="text-base">手動新增時間紀錄</CardTitle>
+        <CardTitle className="text-base">新增一段時間</CardTitle>
         <p className="text-sm text-muted-foreground">
-          建議每天固定時段（例如晚間 21:00）回顧並記錄一天的時間去向。
+          先填時段、活動和生活情境就能儲存；其他盤點細節可以之後再補。
         </p>
       </CardHeader>
       <CardContent>
@@ -198,12 +200,16 @@ export function AddRecordForm({
           <div className="mb-5 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
             <Sparkles className="h-4 w-4 shrink-0 text-green-600" />
             <p className="text-sm text-green-800 font-medium">
-              這段時間已記錄為你的累積 ✨
+              太好了，這段時間已經被你掌握了。
             </p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-xs leading-5 text-emerald-800">
+            小提示：不知道怎麼填時，就寫「剛剛做了什麼」。先完成一筆，比一次填完整更重要。
+          </div>
+
           {/* Date */}
           <div className="space-y-2">
             <Label>日期</Label>
@@ -333,106 +339,115 @@ export function AddRecordForm({
           </div>
 
           {/* Difficulty */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>這件事的投入程度</Label>
-              <span className={`text-sm font-medium ${diffInfo.color}`}>
-                {difficulty} — {diffInfo.label}
-              </span>
-            </div>
-            <Slider
-              value={[difficulty]}
-              onValueChange={([v]) => setDifficulty(v)}
-              min={1}
-              max={5}
-              step={1}
-              className="py-2"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>輕鬆</span>
-              <span>中等</span>
-              <span>較有挑戰</span>
-            </div>
-          </div>
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen} className="rounded-lg border bg-muted/10">
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="ghost" className="flex w-full justify-between px-3">
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  想多盤點一點再展開
+                </span>
+                {advancedOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-5 border-t px-3 py-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>這件事的投入程度</Label>
+                  <span className={`text-sm font-medium ${diffInfo.color}`}>
+                    {difficulty} — {diffInfo.label}
+                  </span>
+                </div>
+                <Slider
+                  value={[difficulty]}
+                  onValueChange={([v]) => setDifficulty(v)}
+                  min={1}
+                  max={5}
+                  step={1}
+                  className="py-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>輕鬆</span>
+                  <span>中等</span>
+                  <span>較有挑戰</span>
+                </div>
+              </div>
 
-          {/* Assets */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <Label>這段時間累積了什麼？（可多選）</Label>
-              {suggestedAssets.length > 0 && (
-                <Button type="button" variant="ghost" size="sm" onClick={applySuggestedAssets}>
-                  套用建議
-                </Button>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <Label>這段時間累積了什麼？（可多選）</Label>
+                  {suggestedAssets.length > 0 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={applySuggestedAssets}>
+                      套用建議
+                    </Button>
+                  )}
+                </div>
+                {suggestedAssets.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    建議：{suggestedAssets.join("、")}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {DISPLAY_ASSETS.map((asset) => (
+                    <Badge
+                      key={asset}
+                      variant={assets.includes(asset) ? "default" : "outline"}
+                      className="cursor-pointer transition-all active:scale-95"
+                      onClick={() => toggleAsset(asset)}
+                    >
+                      {assets.includes(asset) && <Check className="mr-1 h-3 w-3" />}
+                      {asset}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="hasOutput"
+                  checked={hasOutput}
+                  onCheckedChange={(checked) => setHasOutput(checked === true)}
+                />
+                <Label htmlFor="hasOutput" className="cursor-pointer">
+                  這段時間有留下成果、感受或完成一件事
+                </Label>
+              </div>
+
+              {hasOutput && (
+                <div className="space-y-2">
+                  <Label htmlFor="outputDesc">成果或感受（選填）</Label>
+                  <Textarea
+                    id="outputDesc"
+                    placeholder="例如：完成一篇文章草稿、身體有恢復、想法更清楚"
+                    value={outputDescription}
+                    onChange={(e) => setOutputDescription(e.target.value)}
+                    rows={2}
+                  />
+                </div>
               )}
-            </div>
-            {suggestedAssets.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                建議：{suggestedAssets.join("、")}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {DISPLAY_ASSETS.map((asset) => (
-                <Badge
-                  key={asset}
-                  variant={assets.includes(asset) ? "default" : "outline"}
-                  className="cursor-pointer transition-all active:scale-95"
-                  onClick={() => toggleAsset(asset)}
+
+              <div className="space-y-2">
+                <Label>目前的轉換狀態</Label>
+                <Select
+                  value={conversionStatus}
+                  onValueChange={(v) => setConversionStatus(v as ConversionStatus)}
                 >
-                  {assets.includes(asset) && <Check className="mr-1 h-3 w-3" />}
-                  {asset}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Has Output */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="hasOutput"
-              checked={hasOutput}
-              onCheckedChange={(checked) => setHasOutput(checked === true)}
-            />
-            <Label htmlFor="hasOutput" className="cursor-pointer">
-              這段時間有留下成果、感受或完成一件事
-            </Label>
-          </div>
-
-          {/* Output Description */}
-          {hasOutput && (
-            <div className="space-y-2">
-              <Label htmlFor="outputDesc">成果或感受（選填）</Label>
-              <Textarea
-                id="outputDesc"
-                placeholder="例如：完成一篇文章草稿、身體有恢復、想法更清楚"
-                value={outputDescription}
-                onChange={(e) => setOutputDescription(e.target.value)}
-                rows={2}
-              />
-            </div>
-          )}
-
-          {/* Conversion Status */}
-          <div className="space-y-2">
-            <Label>目前的轉換狀態</Label>
-            <Select
-              value={conversionStatus}
-              onValueChange={(v) => setConversionStatus(v as ConversionStatus)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CONVERSION_STATUSES.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONVERSION_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "儲存中…" : "新增紀錄"}
+            {isSubmitting ? "儲存中…" : "新增這段時間"}
           </Button>
         </form>
       </CardContent>

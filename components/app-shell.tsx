@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { ArrowLeft, HeartHandshake, Plus, Sparkles, X } from "lucide-react"
 import { Navigation } from "./navigation"
@@ -11,6 +11,14 @@ import { getPlatformContextFromSearchParams } from "@/lib/platform-context"
 import { useTimeRecordStore } from "@/lib/store"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <AppShellContent>{children}</AppShellContent>
+    </Suspense>
+  )
+}
+
+function AppShellContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams()
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -18,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const records = useTimeRecordStore((state) => state.records)
   const platformContext = getPlatformContextFromSearchParams(searchParams)
   const isSocialWorker = platformContext.audienceMode === "social-worker"
+  const hasRecords = records.length > 0
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -36,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#fff8f3_0%,#ffffff_48%,#f4fbf8_100%)] text-slate-900">
+    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_48%,#f3fbf6_100%)] text-slate-900">
       <Navigation />
       <main className="flex-1">
         <div className="mx-auto max-w-6xl px-4 py-4 md:py-5">
@@ -59,7 +68,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <div className="fixed bottom-20 right-5 z-40 flex flex-col items-end gap-3">
+      {hasRecords && (
+      <div className="fixed bottom-20 right-5 z-40 hidden flex-col items-end gap-3 sm:flex">
         {summaryOpen && (
           <div className="max-h-[70vh] w-[min(calc(100vw-2.5rem),420px)] overflow-y-auto rounded-3xl border border-emerald-100 bg-white p-2 shadow-2xl">
             <div className="mb-2 flex items-center justify-between px-2 pt-1">
@@ -86,14 +96,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           AI 時間摘要
         </button>
       </div>
+      )}
 
       <button
-        className="fixed bottom-5 right-5 z-40 flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 active:scale-95"
+        className="fixed bottom-5 right-5 z-40 hidden h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 active:scale-95 sm:flex"
         aria-label="新增一筆"
         onClick={openAddRecordToday}
       >
         <Plus className="h-4 w-4" />
-        新增一筆
+        新增時間
       </button>
 
       <RecordEntrySheet open={sheetOpen} onOpenChange={setSheetOpen} selectedDate={selectedDate} />

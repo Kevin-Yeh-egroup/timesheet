@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowRight, FileText, Search, UsersRound } from "lucide-react"
@@ -17,6 +18,24 @@ function buildToolHref(caseId: string, caseName: string, searchParams: URLSearch
 }
 
 export default function CasesPage() {
+  return (
+    <Suspense fallback={<CasesLoading />}>
+      <CasesPageContent />
+    </Suspense>
+  )
+}
+
+function CasesLoading() {
+  return (
+    <AppShell>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    </AppShell>
+  )
+}
+
+function CasesPageContent() {
   const searchParams = useSearchParams()
   const query = new URLSearchParams(searchParams?.toString())
   const hasPlatformCase = query.has("familyfinhealthCaseId") || query.has("caseId")

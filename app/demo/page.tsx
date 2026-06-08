@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowRight, BarChart3, CalendarCheck, Clock3, ListChecks, MessageCircle, Sparkles } from "lucide-react"
@@ -49,6 +50,24 @@ const previewCards = [
 ]
 
 export default function DemoPage() {
+  return (
+    <Suspense fallback={<DemoLoading />}>
+      <DemoPageContent />
+    </Suspense>
+  )
+}
+
+function DemoLoading() {
+  return (
+    <AppShell>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    </AppShell>
+  )
+}
+
+function DemoPageContent() {
   const searchParams = useSearchParams()
   const queryString = searchParams?.toString()
   const overviewHref = `/${queryString ? `?${queryString}` : ""}`
