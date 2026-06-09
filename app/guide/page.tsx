@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowRight, CheckCircle2, Clock3, PenLine, Share2, Sparkles, Wand2 } from "lucide-react"
@@ -68,9 +68,17 @@ function GuideLoading() {
 
 function GuidePageContent() {
   const searchParams = useSearchParams()
+  const [exampleHighlighted, setExampleHighlighted] = useState(false)
   const entryParams = new URLSearchParams(searchParams?.toString())
   entryParams.set("from", "guide")
+  entryParams.set("start", "record")
   const guideToolEntryHref = `${PLATFORM_PATHS.toolEntry}?${entryParams.toString()}`
+
+  const showExamples = () => {
+    document.getElementById("example")?.scrollIntoView({ behavior: "smooth", block: "center" })
+    setExampleHighlighted(true)
+    window.setTimeout(() => setExampleHighlighted(false), 1600)
+  }
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbff_0%,#ffffff_42%,#f6fbf7_100%)]">
@@ -98,10 +106,8 @@ function GuidePageContent() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="justify-center bg-white">
-                <Link href="#example">
+              <Button type="button" variant="outline" size="lg" className="justify-center bg-white" onClick={showExamples}>
                   先看填寫範例
-                </Link>
               </Button>
             </div>
           </div>
@@ -125,7 +131,11 @@ function GuidePageContent() {
         </section>
 
         <section id="example" className="grid scroll-mt-8 gap-4 py-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
+          <div
+            className={`rounded-2xl border bg-blue-50/70 p-5 transition-all duration-300 ${
+              exampleHighlighted ? "border-blue-400 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" : "border-blue-100"
+            }`}
+          >
             <div className="flex items-center gap-2 text-sm font-semibold text-blue-800">
               <Wand2 className="h-4 w-4" />
               可以直接這樣填

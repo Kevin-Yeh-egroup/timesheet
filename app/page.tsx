@@ -54,6 +54,7 @@ function PageLoading() {
 
 function DashboardPageContent() {
   const searchParams = useSearchParams()
+  const startIntent = searchParams?.get("start")
   const [mounted, setMounted] = useState(false)
   const [reminderSheetOpen, setReminderSheetOpen] = useState(false)
   const [reminderDate, setReminderDate] = useState<Date>(new Date())
@@ -63,6 +64,13 @@ function DashboardPageContent() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!mounted || startIntent !== "record") return
+
+    setReminderDate(new Date())
+    setReminderSheetOpen(true)
+  }, [mounted, startIntent])
 
   if (!mounted) {
     return (

@@ -9,6 +9,7 @@ type ToolEntryPageProps = {
     familyfinhealthCaseId?: string
     caseId?: string
     caseName?: string
+    start?: string
   }>
 }
 
@@ -23,6 +24,10 @@ export default async function ToolEntryPage({ searchParams }: ToolEntryPageProps
   const destination = resolveToolEntryPath(platformContext, {
     guideCompleted: params?.from === "guide",
   })
+  const destinationUrl = new URL(destination, "https://timesheet.local")
+  if (params?.start === "record") {
+    destinationUrl.searchParams.set("start", "record")
+  }
 
-  redirect(destination)
+  redirect(`${destinationUrl.pathname}${destinationUrl.search}`)
 }
