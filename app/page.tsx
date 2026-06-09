@@ -138,7 +138,7 @@ function DashboardPageContent() {
 
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                  {isSocialWorker ? "先陪他補上一段時間" : "先補上一段時間，就能開始掌握今天"}
+                  {isSocialWorker ? "先陪他補上一段時間" : "先補上一段時間，就能開始掌握每一天"}
                 </h1>
                 <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                   不用先理解全部功能。選時間、寫活動、按新增紀錄；完成後再看摘要與報表，慢慢找出自己的時間節奏。
