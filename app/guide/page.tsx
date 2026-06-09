@@ -33,20 +33,20 @@ const examples = [
 
 const meaningCards = [
   {
-    title: "簡單",
-    description: "第一筆只要時間、活動、情境三件事。",
+    title: "不用完整",
+    description: "先寫最清楚的一段，其他之後再補。",
   },
   {
-    title: "好玩",
-    description: "把一天拆成小片段，像收集自己的時間線索。",
+    title: "不用登入",
+    description: "可以先試用，紀錄留在這台裝置。",
   },
   {
-    title: "有意義",
-    description: "你會看見哪些時間正在支持能力、休息或關係。",
+    title: "自己看",
+    description: "這是給自己回看的生活線索，不是檢查表。",
   },
   {
-    title: "可分享",
-    description: "完成紀錄後，可以分享今天的時間亮點。",
+    title: "自己決定",
+    description: "要不要分享、分享多少，都由你決定。",
   },
 ]
 
@@ -95,7 +95,7 @@ function GuidePageContent() {
                 不用學系統，先記一段時間就好
               </h1>
               <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-                這個工具不是要你交作業，而是幫你看見時間去哪裡。先完成第一筆，之後再慢慢補齊、回顧、分享自己的時間亮點。
+                這個工具不是要你交作業，而是幫你看見時間去哪裡。先完成第一筆，之後再慢慢回看自己的時間節奏。
               </p>
             </div>
 
@@ -148,7 +148,7 @@ function GuidePageContent() {
               ))}
             </div>
             <p className="mt-4 text-sm leading-6 text-blue-900/75">
-              如果懶得分欄填，也可以打開「快速幫手」，用一句話讓 AI 先幫你整理成草稿。
+              照著其中一句改成自己的內容就好。第一筆不用完美，有記下來就已經開始了。
             </p>
           </div>
 
@@ -171,7 +171,7 @@ function GuidePageContent() {
               </div>
               <p className="mt-2 text-xl font-bold">你不是在填表，你是在把時間拿回自己手上。</p>
               <p className="mt-1 text-sm leading-6 text-emerald-50/85">
-                先完成一筆，總覽會出現時間掌握感；有收穫時，再分享今天的亮點。
+                先完成一筆，總覽會出現時間掌握感；紀錄預設留在你的裝置，不會自動公開。
               </p>
             </div>
             <Button asChild size="lg" variant="secondary" className="shrink-0">

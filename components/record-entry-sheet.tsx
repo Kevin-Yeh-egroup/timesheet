@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
@@ -56,27 +57,11 @@ export function RecordEntrySheet({
             <PenLine className="h-4 w-4 text-blue-500" />
             新增一筆
           </SheetTitle>
-          <p className="text-xs text-muted-foreground">
-            先填一段最清楚的時間；想更快時，再打開 AI 或模板。
-          </p>
+          <SheetDescription className="text-xs text-muted-foreground">
+            先填一段最清楚的時間，不用打開 AI 也能直接新增。
+          </SheetDescription>
         </SheetHeader>
         <div className="space-y-4 px-6 py-5">
-          <Collapsible open={assistOpen} onOpenChange={setAssistOpen} className="rounded-xl border border-blue-100 bg-blue-50/50">
-            <CollapsibleTrigger asChild>
-              <Button type="button" variant="ghost" className="flex w-full justify-between px-3 text-blue-800 hover:bg-blue-50">
-                <span className="flex items-center gap-2">
-                  <Wand2 className="h-4 w-4" />
-                  快速幫手：AI 一句話 / 常用模板
-                </span>
-                {assistOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 border-t border-blue-100 p-3">
-              <AIIntakeDemo onParsed={setPrefillRecord} />
-              <QuickTemplates initialDate={selectedDate} />
-            </CollapsibleContent>
-          </Collapsible>
-
           <AddRecordForm
             prefill={prefillRecord}
             initialDate={selectedDate}
@@ -84,6 +69,25 @@ export function RecordEntrySheet({
             initialEndTime={initialEndTime}
             onSuccess={() => onOpenChange(false)}
           />
+
+          <Collapsible open={assistOpen} onOpenChange={setAssistOpen} className="rounded-xl border border-blue-100 bg-blue-50/50">
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="ghost" className="flex w-full justify-between px-3 text-blue-800 hover:bg-blue-50">
+                <span className="flex items-center gap-2">
+                  <Wand2 className="h-4 w-4" />
+                  想更快時，再打開 AI / 常用模板
+                </span>
+                {assistOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 border-t border-blue-100 p-3">
+              <p className="rounded-lg bg-white px-3 py-2 text-xs leading-5 text-blue-900/75">
+                AI 會先整理成草稿，確認後會帶入上方表單；不想送出文字時，維持手動新增就好。
+              </p>
+              <AIIntakeDemo onParsed={setPrefillRecord} />
+              <QuickTemplates initialDate={selectedDate} />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </SheetContent>
     </Sheet>

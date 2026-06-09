@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { format } from "date-fns"
 import { zhTW } from "date-fns/locale"
-import { ArrowRight, BookOpen, CheckCircle2, Clock3, PlusCircle, Share2, Sparkles, Wand2 } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Clock3, Copy, PlusCircle, Share2, ShieldCheck, Sparkles, Wand2, X } from "lucide-react"
 import { toast } from "sonner"
 import { AppShell } from "@/components/app-shell"
 import { MetricsCards } from "@/components/metrics-cards"
@@ -14,6 +14,8 @@ import { DailyCompletion } from "@/components/daily-completion"
 import { TimeReminderCard } from "@/components/time-reminder-card"
 import { RecordEntrySheet } from "@/components/record-entry-sheet"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { useTimeRecordStore } from "@/lib/store"
 import { calculateMetrics, calculateTrackedHoursByDate } from "@/lib/types"
 import { getPlatformContextFromSearchParams } from "@/lib/platform-context"
@@ -31,7 +33,7 @@ const firstRunSteps = [
   },
   {
     title: "按新增紀錄",
-    description: "完成第一筆後，就能看見今天掌握了多少時間。",
+    description: "完成第一筆後，就能看見自己掌握了多少時間。",
     icon: CheckCircle2,
   },
 ]
@@ -58,6 +60,8 @@ function DashboardPageContent() {
   const [mounted, setMounted] = useState(false)
   const [reminderSheetOpen, setReminderSheetOpen] = useState(false)
   const [reminderDate, setReminderDate] = useState<Date>(new Date())
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [shareDraft, setShareDraft] = useState("")
   const records = useTimeRecordStore((state) => state.records)
   const getMonthRecords = useTimeRecordStore((state) => state.getMonthRecords)
 
@@ -86,7 +90,7 @@ function DashboardPageContent() {
   const todayKey = format(now, "yyyy-MM-dd")
   const platformContext = getPlatformContextFromSearchParams(searchParams)
   const isSocialWorker = platformContext.audienceMode === "social-worker"
-  const caseName = searchParams?.get("caseName")
+  const hasCaseContext = Boolean(searchParams?.get("caseName"))
   const queryString = searchParams?.toString()
   const withCurrentParams = (href: string) => `${href}${queryString ? `?${queryString}` : ""}`
   const monthRecords = getMonthRecords(now.getFullYear(), now.getMonth())
@@ -95,11 +99,9 @@ function DashboardPageContent() {
   const hasRecords = records.length > 0
   const todayRecords = records.filter((record) => record.date === todayKey)
 
-  const topShareRecord = todayRecords[0] ?? monthRecords[0]
   const shareScope = todayRecords.length > 0 ? "今天" : "最近"
   const shareHours = todayRecords.length > 0 ? todayTrackedHours : metrics.totalHours
-  const shareActivity = topShareRecord ? `，其中一段是「${topShareRecord.activity}」` : ""
-  const shareText = `我${shareScope}已掌握 ${shareHours.toFixed(1)} 小時${shareActivity}。先記一段時間，就更清楚自己的生活節奏。`
+  const shareText = `我${shareScope}已記下 ${shareHours.toFixed(1)} 小時。先留一小段紀錄，就更清楚自己的生活節奏。`
 
   const openAddRecordForDate = (date: Date) => {
     setReminderDate(date)
@@ -110,15 +112,28 @@ function DashboardPageContent() {
     openAddRecordForDate(now)
   }
 
+  const openSharePreview = () => {
+    setShareDraft(shareText)
+    setShareDialogOpen(true)
+  }
+
   const shareProgress = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({ text: shareText })
+      const text = shareDraft.trim()
+      if (!text) {
+        toast.error("請先留下想分享的文字")
         return
       }
 
-      await navigator.clipboard.writeText(shareText)
+      if (navigator.share) {
+        await navigator.share({ text })
+        setShareDialogOpen(false)
+        return
+      }
+
+      await navigator.clipboard.writeText(text)
       toast.success("已複製分享文字")
+      setShareDialogOpen(false)
     } catch {
       toast.error("目前無法分享，請稍後再試")
     }
@@ -132,16 +147,22 @@ function DashboardPageContent() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                  {isSocialWorker ? "社工陪填版" : "我的時間盤點"}
+                  {isSocialWorker ? "社工陪填版" : "我的時間紀錄"}
                 </span>
-                {isSocialWorker && caseName && (
+                {isSocialWorker && hasCaseContext && (
                   <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
-                    個案：{caseName}
+                    已帶入服務對象
                   </span>
                 )}
                 <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                   先完成一筆就好
                 </span>
+                {!isSocialWorker && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    不用註冊，先存在這台裝置
+                  </span>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -158,18 +179,21 @@ function DashboardPageContent() {
                   <PlusCircle className="h-4 w-4" />
                   {hasRecords ? "新增一筆時間" : "新增第一筆"}
                 </Button>
-                <Button asChild variant="outline" size="lg" className="justify-center">
-                  <Link href={withCurrentParams("/guide")}>
-                    <BookOpen className="h-4 w-4" />
-                    30 秒看懂
-                  </Link>
-                </Button>
-                <Button asChild variant="ghost" size="lg" className="justify-center text-emerald-800 hover:text-emerald-900">
-                  <Link href={withCurrentParams("/ai")}>
-                    <Wand2 className="h-4 w-4" />
-                    用一句話整理
-                  </Link>
-                </Button>
+                {hasRecords && (
+                  <Button asChild variant="outline" size="lg" className="justify-center">
+                    <Link href={withCurrentParams("/ai")}>
+                      <Wand2 className="h-4 w-4" />
+                      用一句話整理
+                    </Link>
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <Link href={withCurrentParams("/guide")} className="inline-flex items-center gap-1 font-medium text-emerald-800 underline-offset-4 hover:underline">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  30 秒看懂
+                </Link>
+                <span>你的第一筆可以很簡單，之後再看報表或 AI。</span>
               </div>
             </div>
 
@@ -201,7 +225,7 @@ function DashboardPageContent() {
                   已掌握 {todayTrackedHours.toFixed(1)} 小時。覺得有收穫時，可以把這句小成果分享出去。
                 </p>
               </div>
-              <Button type="button" variant="outline" onClick={shareProgress} className="bg-white">
+              <Button type="button" variant="outline" onClick={openSharePreview} className="bg-white">
                 <Share2 className="h-4 w-4" />
                 分享亮點
               </Button>
@@ -246,6 +270,34 @@ function DashboardPageContent() {
         onOpenChange={setReminderSheetOpen}
         selectedDate={reminderDate}
       />
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-emerald-700" />
+              分享前先確認
+            </DialogTitle>
+            <DialogDescription>
+              預設不放活動明細。你可以改成想給朋友看的語氣，再決定要不要分享。
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={shareDraft}
+            onChange={(event) => setShareDraft(event.target.value)}
+            className="min-h-28"
+          />
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="ghost" onClick={() => setShareDialogOpen(false)}>
+              <X className="h-4 w-4" />
+              取消
+            </Button>
+            <Button type="button" onClick={shareProgress}>
+              <Copy className="h-4 w-4" />
+              分享或複製
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   )
 }

@@ -98,14 +98,16 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       </div>
       )}
 
-      <button
-        className="fixed bottom-5 right-5 z-40 hidden h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 active:scale-95 sm:flex"
-        aria-label="新增一筆"
-        onClick={openAddRecordToday}
-      >
-        <Plus className="h-4 w-4" />
-        新增時間
-      </button>
+      {hasRecords && (
+        <button
+          className="fixed bottom-5 right-5 z-40 hidden h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 active:scale-95 sm:flex"
+          aria-label="新增一筆"
+          onClick={openAddRecordToday}
+        >
+          <Plus className="h-4 w-4" />
+          新增時間
+        </button>
+      )}
 
       <RecordEntrySheet open={sheetOpen} onOpenChange={setSheetOpen} selectedDate={selectedDate} />
     </div>

@@ -204,6 +204,9 @@ export function ExportButton({ records, metrics }: ExportButtonProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <div className="max-w-64 px-2 py-2 text-xs leading-5 text-muted-foreground">
+          匯出會包含活動、成果和時間明細。傳給他人前，請先確認沒有私密內容。
+        </div>
         <DropdownMenuItem onClick={handleExportCSV}>
           <Download className="mr-2 h-4 w-4" />
           匯出 CSV

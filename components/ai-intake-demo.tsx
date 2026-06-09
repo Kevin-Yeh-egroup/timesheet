@@ -36,7 +36,7 @@ interface BrowserSpeechRecognition {
 const DEMO_SAMPLES = [
   "今天上班8小時、通勤聽英文30分、陪家人1小時、休息2小時",
   "上班9小時\n打掃整理30分\n運動1小時\n朋友聚會2小時",
-  "寫作副業2小時、讀書1小時、陪長輩看診1小時",
+  "寫作副業2小時、讀書1小時、散步放空1小時",
 ]
 
 const CAT_COLORS: Record<Category, string> = {
@@ -225,7 +225,7 @@ export function AIIntakeDemo({ onParsed }: { onParsed: (result: AIParsedResult) 
       const sourceLabel = source === "gemini" ? "AI 已整理完成" : "已用本機規則整理完成"
       if (results.length === 1) {
         onParsed(results[0])
-        toast.success(`${sourceLabel}，帶入下方表單確認後儲存`)
+        toast.success(`${sourceLabel}，已帶入表單，確認後再儲存`)
       } else {
         toast.success(`${sourceLabel}，辨識出 ${results.length} 筆紀錄`)
       }
@@ -242,7 +242,9 @@ export function AIIntakeDemo({ onParsed }: { onParsed: (result: AIParsedResult) 
   const handleQuickDemo = () => {
     const sample = DEMO_SAMPLES[Math.floor(Math.random() * DEMO_SAMPLES.length)]
     setInput(sample)
-    void runConvert(sample)
+    setParsedList([])
+    setPhase("idle")
+    toast.success("已帶入示範文字，確認後再按 AI 整理")
   }
 
   const handleCardChange = (idx: number, updated: Partial<AIParsedResult>) => {
@@ -431,7 +433,7 @@ export function AIIntakeDemo({ onParsed }: { onParsed: (result: AIParsedResult) 
                 </>
               ) : (
                 <p className="w-full text-center text-xs text-green-700">
-                  已帶入下方表單，確認後按「新增紀錄」儲存
+                  已帶入表單，確認後按「新增紀錄」儲存
                 </p>
               )}
             </div>
@@ -440,23 +442,28 @@ export function AIIntakeDemo({ onParsed }: { onParsed: (result: AIParsedResult) 
 
         {/* 底部按鈕（輸入階段） */}
         {phase !== "done" && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleQuickDemo}
-              disabled={phase === "converting"}
-            >
-              試用示範輸入
-            </Button>
-            <Button
-              type="button"
-              className="w-full"
-              disabled={!canSubmit}
-              onClick={handleConvert}
-            >
-              AI 整理
-            </Button>
+          <div className="space-y-2">
+            <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+              只有按下 AI 整理時，這段文字才會送到外部 AI 服務產生草稿；有私人內容就先拿掉，或改用手動新增。
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleQuickDemo}
+                disabled={phase === "converting"}
+              >
+                帶入示範文字
+              </Button>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!canSubmit}
+                onClick={handleConvert}
+              >
+                AI 整理
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

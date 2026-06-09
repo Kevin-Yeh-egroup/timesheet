@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-import { BarChart3, Clock, LayoutDashboard, ListChecks, MessageCircle } from "lucide-react"
+import { BarChart3, Clock, LayoutDashboard, ListChecks, MessageCircle, PlusCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTimeRecordStore } from "@/lib/store"
 
 const navItems = [
   { href: "/", label: "總覽", icon: LayoutDashboard },
@@ -16,8 +17,17 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const recordCount = useTimeRecordStore((state) => state.records.length)
   const queryString = searchParams?.toString()
   const withCurrentParams = (href: string) => `${href}${queryString ? `?${queryString}` : ""}`
+  const startParams = new URLSearchParams(searchParams?.toString())
+  startParams.set("start", "record")
+  const visibleItems = recordCount > 0
+    ? navItems
+    : [
+        { href: "/", label: "總覽", icon: LayoutDashboard },
+        { href: `/?${startParams.toString()}`, label: "開始", icon: PlusCircle },
+      ]
 
   return (
     <nav className="sticky top-0 z-50 border-b border-emerald-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
@@ -25,12 +35,13 @@ export function Navigation() {
         <div className="hidden shrink-0 rounded-full bg-[linear-gradient(135deg,#00695c_0%,#00897b_100%)] px-4 py-2 text-white shadow-sm md:block">
           <p className="text-xs font-bold leading-none">時間掌握小幫手</p>
         </div>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href
+        {visibleItems.map((item) => {
+          const baseHref = item.href.split("?")[0]
+          const isActive = pathname === baseHref
           return (
             <Link
               key={item.href}
-              href={withCurrentParams(item.href)}
+              href={item.href.includes("?") ? item.href : withCurrentParams(item.href)}
               className={cn(
                 "flex min-w-16 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs transition-all hover:scale-[1.02] active:scale-[0.99] md:min-w-0 md:px-3.5 md:text-sm",
                 isActive

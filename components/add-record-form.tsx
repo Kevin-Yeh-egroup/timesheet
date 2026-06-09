@@ -155,7 +155,7 @@ export function AddRecordForm({
       date: format(date, "yyyy-MM-dd"),
       activity: activity.trim(),
       category,
-      hours: calculatedHours ?? (parseFloat(hours) || 1),
+      hours: calculatedHours,
       startTime,
       endTime,
       difficulty,
@@ -190,7 +190,7 @@ export function AddRecordForm({
       <CardHeader>
         <CardTitle className="text-base">新增一段時間</CardTitle>
         <p className="text-sm text-muted-foreground">
-          先填時段、活動和生活情境就能儲存；其他盤點細節可以之後再補。
+          只要日期、時段和活動就能儲存；其他細節可以之後再補。
         </p>
       </CardHeader>
       <CardContent>
@@ -207,7 +207,7 @@ export function AddRecordForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-xs leading-5 text-emerald-800">
-            小提示：不知道怎麼填時，就寫「剛剛做了什麼」。先完成一筆，比一次填完整更重要。
+            小提示：不知道怎麼填時，就寫「剛剛做了什麼」。紀錄先存在這台裝置的瀏覽器，不會自動公開或同步。
           </div>
 
           {/* Date */}
@@ -276,6 +276,9 @@ export function AddRecordForm({
                 </Select>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              這段時間約 {hours} 小時，會自動帶入紀錄。
+            </p>
           </div>
 
           {/* Activity */}
@@ -283,59 +286,10 @@ export function AddRecordForm({
             <Label htmlFor="activity">活動內容</Label>
             <Input
               id="activity"
-              placeholder="例如：通勤聽英文 podcast、陪長輩看診、整理房間"
+              placeholder="例如：通勤聽英文 podcast、整理資料、散步放空"
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
             />
-          </div>
-
-          {/* Category & Hours */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>生活情境</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {CATEGORY_EMOJIS[cat] || ""} {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="hours">時數</Label>
-              <Input
-                id="hours"
-                type="number"
-                min="0.5"
-                step="0.5"
-                value={hours}
-                onChange={(e) => setHours(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <Label className="text-sm">常見情境</Label>
-              <span className="text-xs text-muted-foreground">可點選帶入，也可略過</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categoryPresets.map((preset) => (
-                <Badge
-                  key={preset.activity}
-                  variant="outline"
-                  className="cursor-pointer transition-all hover:bg-accent active:scale-95"
-                  onClick={() => applyPreset(preset)}
-                >
-                  {preset.activity}
-                </Badge>
-              ))}
-            </div>
           </div>
 
           {/* Difficulty */}
@@ -344,12 +298,55 @@ export function AddRecordForm({
               <Button type="button" variant="ghost" className="flex w-full justify-between px-3">
                 <span className="flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4" />
-                  想多盤點一點再展開
+                  想多記一點再展開
                 </span>
                 {advancedOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-5 border-t px-3 py-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>生活情境</Label>
+                  <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {CATEGORY_EMOJIS[cat] || ""} {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>時數</Label>
+                  <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                    依開始與結束時間自動換算：{hours} 小時
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 rounded-lg border bg-white p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-sm">常見情境</Label>
+                  <span className="text-xs text-muted-foreground">可點選帶入，也可略過</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {categoryPresets.map((preset) => (
+                    <Badge
+                      key={preset.activity}
+                      variant="outline"
+                      className="cursor-pointer transition-all hover:bg-accent active:scale-95"
+                      onClick={() => applyPreset(preset)}
+                    >
+                      {preset.activity}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>這件事的投入程度</Label>
@@ -445,6 +442,10 @@ export function AddRecordForm({
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
+            這筆資料目前只存在這台裝置裡。換裝置或清除網站資料後，這裡的紀錄可能不會保留。
+          </p>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "儲存中…" : "新增這段時間"}

@@ -32,7 +32,7 @@ export default function AIPage() {
             AI 整理
           </h1>
           <p className="text-sm text-muted-foreground">
-            用語音或文字描述一天，讓 AI 協助整理成可確認的時間紀錄。
+            用語音或文字描述一段時間，AI 可以幫你整理草稿；只有按「AI 整理」時才會把文字送到外部 AI 服務，不想送出就改用手動新增。
           </p>
         </header>
         <AIIntakeDemo onParsed={setPrefillRecord} />
